@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public class BuildTask
     {

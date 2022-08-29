@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     public enum VerifyMode
     {

@@ -1,4 +1,4 @@
-namespace xasset
+namespace UAsset
 {
     public class Reference
     {

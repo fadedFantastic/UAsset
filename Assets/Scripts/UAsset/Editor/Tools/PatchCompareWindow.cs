@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
 	public class PatchCompareWindow : EditorWindow
 	{

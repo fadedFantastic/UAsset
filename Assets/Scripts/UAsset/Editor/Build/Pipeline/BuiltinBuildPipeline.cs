@@ -1,6 +1,6 @@
 using UnityEditor;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public class BuiltinBuildPipeline : ABuildPipeline
     {

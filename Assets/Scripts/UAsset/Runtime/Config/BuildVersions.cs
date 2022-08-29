@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     public class BuildVersions : ScriptableObject
     {

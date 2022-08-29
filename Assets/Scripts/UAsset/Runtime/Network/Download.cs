@@ -7,7 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     public class Download : CustomYieldInstruction
     {

@@ -1,6 +1,6 @@
 using System.Collections;
 using UnityEngine;
-using xasset;
+using UAsset;
 
 /// <summary>
 /// 检查资源差异

@@ -1,6 +1,6 @@
 using UnityEngine.SceneManagement;
 
-namespace xasset
+namespace UAsset
 {
     public class BundledScene : Scene
     {

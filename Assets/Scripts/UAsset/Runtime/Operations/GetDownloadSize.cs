@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace xasset
+namespace UAsset
 {
     /// <summary>
     ///     异步获取下载大小。

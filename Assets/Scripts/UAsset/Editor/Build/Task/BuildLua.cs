@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public class BuildLua : BuildTaskJob
     {

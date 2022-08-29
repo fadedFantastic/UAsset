@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     public class Bundle : Loadable
     {

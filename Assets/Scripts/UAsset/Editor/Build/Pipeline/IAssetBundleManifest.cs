@@ -1,4 +1,4 @@
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public interface IAssetBundleManifest
     {

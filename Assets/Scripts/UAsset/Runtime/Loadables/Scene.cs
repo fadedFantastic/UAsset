@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace xasset
+namespace UAsset
 {
     public class Scene : Loadable, IEnumerator
     {

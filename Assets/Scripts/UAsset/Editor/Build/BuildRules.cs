@@ -7,7 +7,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     /// <summary>
     /// 资源加载方式类型。

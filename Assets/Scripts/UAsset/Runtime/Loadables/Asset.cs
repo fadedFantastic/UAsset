@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Object = UnityEngine.Object;
 
-namespace xasset
+namespace UAsset
 {
     public class Asset : Loadable, IEnumerator
     {

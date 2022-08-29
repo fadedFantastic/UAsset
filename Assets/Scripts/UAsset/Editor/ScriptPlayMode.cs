@@ -1,4 +1,4 @@
-namespace xasset.editor
+namespace UAsset.Editor
 {
     /// <summary>
     ///     脚本运行模式

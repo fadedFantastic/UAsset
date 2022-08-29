@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     public class DiskUtility
     {

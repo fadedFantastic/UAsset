@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public abstract class BuildTaskJob
     {

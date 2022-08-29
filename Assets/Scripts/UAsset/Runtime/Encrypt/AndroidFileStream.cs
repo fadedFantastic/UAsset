@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace xasset
+namespace UAsset
 {
     /// <summary>
     /// 读取Android的assets目录下的文件流

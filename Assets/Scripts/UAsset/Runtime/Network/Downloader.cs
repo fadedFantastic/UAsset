@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     /// <summary>
     ///     下载器，集中管理下载地址和处理下载组件的更新业务。

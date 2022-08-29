@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     public class Manifest : ScriptableObject
     {

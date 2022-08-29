@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 
-namespace xasset
+namespace UAsset
 {
     public static class Logger
     {

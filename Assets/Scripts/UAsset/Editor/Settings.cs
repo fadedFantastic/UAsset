@@ -4,11 +4,11 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public sealed class Settings : ScriptableObject
     {
-        private const string kSettingPath = "Assets/Scripts/Framework/Manager/ResourceSystem/ResourceCustomConfigs/Settings.asset";
+        private const string kSettingPath = "Assets/Scripts/Settings.asset";
         public static string BundleExtension { get; set; } = ".bundle";
 
         public bool requestCopy;

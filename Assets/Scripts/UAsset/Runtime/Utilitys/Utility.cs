@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     public static class Utility
     {

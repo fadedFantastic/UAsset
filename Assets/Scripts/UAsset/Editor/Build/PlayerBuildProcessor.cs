@@ -3,7 +3,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     /// <summary>
     ///     打包安装包的后处理，打包前自动根据分包配置拷贝资源到安装包资源目录，打包后，把拷贝的资源删除，避免漫长的资源导入等待过程。

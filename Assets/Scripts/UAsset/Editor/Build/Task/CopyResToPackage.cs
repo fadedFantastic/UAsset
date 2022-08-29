@@ -1,7 +1,7 @@
 using System.IO;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     /// <summary>
     ///     拷贝资源到StreamingAssets目录(编辑器下默认只拷贝版本和清单文件，出包时由jenkins参数决定)

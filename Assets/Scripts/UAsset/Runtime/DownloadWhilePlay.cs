@@ -3,7 +3,7 @@ using System.Collections;
 using System.IO;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     [DisallowMultipleComponent]
     public class DownloadWhilePlay : MonoBehaviour

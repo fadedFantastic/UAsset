@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public class BuildBundles : BuildTaskJob
     {

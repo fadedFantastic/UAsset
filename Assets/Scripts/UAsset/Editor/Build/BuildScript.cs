@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public static class BuildScript
     {

@@ -4,7 +4,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public class LuaBuild
     {

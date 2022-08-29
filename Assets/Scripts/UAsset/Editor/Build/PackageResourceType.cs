@@ -1,4 +1,4 @@
-namespace xasset.editor
+namespace UAsset.Editor
 {
     /// <summary>
     ///     安装包资源类型

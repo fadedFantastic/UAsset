@@ -1,6 +1,6 @@
 using System.Collections;
 using UnityEngine;
-using xasset;
+using UAsset;
 
 /// <summary>
 /// 下载bundle文件

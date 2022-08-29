@@ -2,7 +2,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public static class MenuItems
     {
@@ -84,7 +84,7 @@ namespace xasset.editor
             Versions.ClearDownload();
         }
         
-        [MenuItem(kBuildPreix + "Select xasset Settings", false, 850)]
+        [MenuItem(kBuildPreix + "Select UAsset Settings", false, 850)]
         public static void SelectSettings()
         {
             var settings = Settings.GetDefaultSettings();

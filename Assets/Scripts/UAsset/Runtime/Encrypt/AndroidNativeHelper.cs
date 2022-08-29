@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace xasset
+namespace UAsset
 {
     public class AndroidNativeHelper
     {

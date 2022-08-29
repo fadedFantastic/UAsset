@@ -1,7 +1,7 @@
 using System.IO;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public class EditorRawAsset : RawAsset
     {

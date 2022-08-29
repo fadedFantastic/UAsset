@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     /// <summary>
     ///     异步更新组件，可以让程序运行的更流畅

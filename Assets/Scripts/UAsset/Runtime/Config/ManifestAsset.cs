@@ -1,6 +1,6 @@
 using System;
 
-namespace xasset
+namespace UAsset
 {
     [Serializable]
     public class ManifestAsset

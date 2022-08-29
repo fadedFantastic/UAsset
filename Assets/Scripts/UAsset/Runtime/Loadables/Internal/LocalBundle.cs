@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     internal class LocalBundle : Bundle
     {

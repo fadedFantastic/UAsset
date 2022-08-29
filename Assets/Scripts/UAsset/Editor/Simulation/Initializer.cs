@@ -3,7 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public static class Initializer
     {

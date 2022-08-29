@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     /// <summary>
     ///     加载路径管理器。

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace xasset
+namespace UAsset
 {
     public class BundledAsset : Asset
     {

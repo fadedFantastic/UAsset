@@ -4,7 +4,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace xasset
+namespace UAsset
 {
     /// <summary>
     ///     运行时初始化操作，主要执行以下流程：

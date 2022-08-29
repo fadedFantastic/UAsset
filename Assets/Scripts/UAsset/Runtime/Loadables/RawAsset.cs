@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine.Networking;
 
-namespace xasset
+namespace UAsset
 {
     public class RawAsset : Loadable
     {

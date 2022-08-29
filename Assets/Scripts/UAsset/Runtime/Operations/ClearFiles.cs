@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace xasset
+namespace UAsset
 {
     /// <summary>
     ///     异步删除文件的操作

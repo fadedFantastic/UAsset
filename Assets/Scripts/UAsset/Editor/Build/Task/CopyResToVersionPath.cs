@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     /// <summary>
     /// 拷贝资源到版本目录

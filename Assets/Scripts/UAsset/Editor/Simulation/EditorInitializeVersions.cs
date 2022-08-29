@@ -1,6 +1,6 @@
 using UnityEditor;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     /// <summary>
     ///     仿真模式的初始化操作

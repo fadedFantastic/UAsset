@@ -2,7 +2,7 @@ using System.IO;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     /// <summary>
     ///     编辑器场景实现类

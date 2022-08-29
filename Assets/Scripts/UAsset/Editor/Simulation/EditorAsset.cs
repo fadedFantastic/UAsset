@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using UnityEditor;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     public class EditorAsset : Asset
     {

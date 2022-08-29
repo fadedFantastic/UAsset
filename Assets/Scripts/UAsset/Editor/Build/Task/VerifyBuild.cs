@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace xasset.editor
+namespace UAsset.Editor
 {
     // 用于修复Unity增量打包时，bundle名变化，间接引用的bundle不更新，导致的引用关系错误
     // 具体思路为加载上个版本的清单文件，检查是否有bundle被删除，如果被删除，则把依赖于该bundle的所有bundle删除

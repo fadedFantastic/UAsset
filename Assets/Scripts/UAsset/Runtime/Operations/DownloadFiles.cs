@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace xasset
+namespace UAsset
 {
     /// <summary>
     ///     批量下载文件的的操作，下载失败后，可以通过 <see cref="Retry" /> 方法对失败的内容重启下载。
