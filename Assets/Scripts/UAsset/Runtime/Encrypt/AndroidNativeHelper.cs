@@ -5,7 +5,7 @@ namespace UAsset
 {
     public class AndroidNativeHelper
     {
-        public const string libName = "xlua";
+        public const string libName = "nativehelper";
 
 #if UNITY_ANDROID
 
@@ -27,6 +27,9 @@ namespace UAsset
         
         [DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
         public static extern long GetLength(IntPtr asset);
+        
+        [DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int ReadAllBytes(string fileName, ref IntPtr result);
 #endif
     }
 }
