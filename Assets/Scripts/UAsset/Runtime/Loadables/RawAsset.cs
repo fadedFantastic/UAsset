@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Mime;
+using UnityEngine;
 using UnityEngine.Networking;
 
 namespace UAsset
@@ -10,11 +12,11 @@ namespace UAsset
         public static readonly Dictionary<string, RawAsset> Cache = new Dictionary<string, RawAsset>();
         private ManifestBundle _info;
         private UnityWebRequest _request;
+        protected byte[] _binaryBytes;
 
         public delegate void LoadRawAssetComplete(string binaryAssetName, byte[] binaryBytes);
         public LoadRawAssetComplete completed;
-        public string savePath { get; private set; }
-        public byte[] binaryBytes { get; protected set; }
+        public byte[] binaryBytes => _binaryBytes;
         public static Func<string, RawAsset> Creator { get; set; } = path => new RawAsset { pathOrURL = path };
 
         public override void LoadImmediate()
@@ -47,18 +49,13 @@ namespace UAsset
                 return;
             }
 
-            savePath = Downloader.GetDownloadDataPath(_info.nameWithAppendHash);
-            var file = new FileInfo(savePath);
-            if (file.Exists)
+            if (Versions.IsDownloaded(_info))
             {
-                if (file.Length == _info.size)
-                {
-                    LoadFinish();
-                    return;
-                }
-                File.Delete(savePath);
+                LoadFinish();
+                return;
             }
 
+            var savePath = Downloader.GetDownloadDataPath(_info.nameWithAppendHash);
             var url = PathManager.GetBundlePathOrURL(_info);
             _request = UnityWebRequest.Get(url);
             _request.downloadHandler = new DownloadHandlerFile(savePath);
@@ -74,7 +71,7 @@ namespace UAsset
                 _request = null;
             }
 
-            binaryBytes = null;
+            _binaryBytes = null;
             Cache.Remove(pathOrURL);
         }
 
@@ -86,7 +83,7 @@ namespace UAsset
             }
             
             var saved = completed;
-            completed?.Invoke(pathOrURL, binaryBytes);
+            completed?.Invoke(pathOrURL, _binaryBytes);
             completed -= saved;
         }
 
@@ -133,12 +130,6 @@ namespace UAsset
         private static RawAsset LoadInternal(string filename, bool mustCompleteOnNextFrame = false, 
             LoadRawAssetComplete completed = null)
         {
-            // TODO: 现在业务层传过来的是短路径，暂时先由外面直接传全路径
-            // PathManager.GetActualPath(ref filename);
-            // if (!Versions.Contains(filename))
-            // {
-            //     throw new FileLoadException(filename);
-            // }
             if (!Cache.TryGetValue(filename, out var asset))
             {
                 asset = CreateInstance(filename);
@@ -159,22 +150,34 @@ namespace UAsset
         {
             if (string.IsNullOrEmpty(errorCode))
             {
-                var filePath = Downloader.GetDownloadDataPath(_info.nameWithAppendHash);
-                binaryBytes = File.ReadAllBytes(filePath);
-                
+                var filePath = PathManager.GetBundlePathOrURL(_info);
+                if (Versions.IsStreamingAsset(_info.nameWithAppendHash))
+                {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                    _binaryBytes = new byte[_info.size];
+                    AndroidNativeHelper.ReadAllBytes(filePath, ref _binaryBytes);
+#else
+                    _binaryBytes = File.ReadAllBytes(filePath);
+#endif
+                }
+                else
+                {
+                    _binaryBytes = File.ReadAllBytes(filePath);
+                }
+
                 if (Versions.EncryptionEnabled)
                 {
-                    Utility.DeEncryptBinaryFile(binaryBytes); 
+                    Utility.DeEncryptBinaryFile(_binaryBytes); 
                 }
             }
             Finish(errorCode);
         }
         
-        public static string GetBinaryPath(string filename)
+        public static string GetBinaryAssetPath(string filename)
         {
             if (Versions.SimulationMode)
             {
-                return $"{UnityEngine.Application.dataPath}/../{filename}";
+                return $"{Application.dataPath}/../{filename}";
             }
             
             var bundle = Versions.GetBundle(filename);

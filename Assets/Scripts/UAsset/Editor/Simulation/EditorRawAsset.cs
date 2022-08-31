@@ -18,8 +18,8 @@ namespace UAsset.Editor
 
         private void FinishLoad()
         {
-            var binaryPath = GetBinaryPath(pathOrURL);
-            binaryBytes = File.ReadAllBytes(binaryPath);
+            var path = GetBinaryAssetPath(pathOrURL);
+            _binaryBytes = File.ReadAllBytes(path);
             Finish();
         }
         
@@ -31,7 +31,7 @@ namespace UAsset.Editor
             }
 
             var saved = completed;
-            completed?.Invoke(pathOrURL, binaryBytes);
+            completed?.Invoke(pathOrURL, _binaryBytes);
             completed -= saved;
         }
 
