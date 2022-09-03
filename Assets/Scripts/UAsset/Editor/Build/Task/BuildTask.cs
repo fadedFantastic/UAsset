@@ -103,7 +103,7 @@ namespace UAsset.Editor
             buildVersions.encryptionEnabled = Settings.EncryptionEnabled;
             buildVersions.language = buildLanguage;
             buildVersions.languages = buildRules.variantDirNames;
-            buildVersions.variantVersion = Enumerable.Repeat(0, buildVersions.languages.Count).ToList();;
+            buildVersions.variantVersion = Enumerable.Repeat(0, buildVersions.languages.Length).ToList();;
             
             File.WriteAllText(GetBuildPath(Versions.Filename), JsonUtility.ToJson(buildVersions, true));
         }

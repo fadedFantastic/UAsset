@@ -6,85 +6,90 @@ namespace UAsset.Editor
 {
     public static class MenuItems
     {
-        internal const string kResourceMenuPrefix = "Tools/ResourceManagerV2/";
-        internal const string kBuildPreix = "Tools/Build/";
+        internal const string kUAssetToolMenu = "UAsset/";
 
-        [MenuItem(kResourceMenuPrefix + "Editor Mode", priority = -11)]
+        #region Script Play Mode
+
+        [MenuItem(kUAssetToolMenu + "Script Play Mode/Editor Mode", priority = -11)]
         public static void EditorModeMenu()
         {
-            var setting = Settings.GetDefaultSettings();
-            setting.scriptPlayMode = ScriptPlayMode.Simulation;
-            UnityEditor.EditorUtility.SetDirty(setting);
+            SetScriptPlayMode(ScriptPlayMode.Simulation);
         }
-        [MenuItem(kResourceMenuPrefix + "Editor Mode", validate = true)]
+        [MenuItem(kUAssetToolMenu + "Script Play Mode/Editor Mode", validate = true)]
         public static bool EditorModeMenu_Validate()
         {
-            var setting = Settings.GetDefaultSettings();
-            Menu.SetChecked(kResourceMenuPrefix + "Editor Mode", setting.scriptPlayMode == ScriptPlayMode.Simulation);
-            return true;
+            return ValidateScriptPlayMode("Script Play Mode/Editor Mode", ScriptPlayMode.Simulation);
         }
         
-        [MenuItem(kResourceMenuPrefix + "Package Mode", priority = -11)]
+        [MenuItem(kUAssetToolMenu + "Script Play Mode/Package Mode", priority = -11)]
         public static void PackageModMenu()
         {
-            var setting = Settings.GetDefaultSettings();
-            setting.scriptPlayMode = ScriptPlayMode.Preload;
-            UnityEditor.EditorUtility.SetDirty(setting);
+            SetScriptPlayMode(ScriptPlayMode.Preload);
         }
-        [MenuItem(kResourceMenuPrefix + "Package Mode", validate = true)]
+        [MenuItem(kUAssetToolMenu + "Script Play Mode/Package Mode", validate = true)]
         public static bool PackageModeMenu_Validate()
         {
+            return ValidateScriptPlayMode("Script Play Mode/Package Mode", ScriptPlayMode.Preload);
+        }
+        
+        [MenuItem(kUAssetToolMenu + "Script Play Mode/Updatable Mode", priority = -11)]
+        public static void UpdatableModeMenu()
+        {
+            SetScriptPlayMode(ScriptPlayMode.Increment);
+        }
+        [MenuItem(kUAssetToolMenu + "Script Play Mode/Updatable Mode", validate = true)]
+        public static bool UpdatableModeMenu_Validate()
+        {
+            return ValidateScriptPlayMode("Script Play Mode/Updatable Mode", ScriptPlayMode.Increment);
+        }
+        
+        private static void SetScriptPlayMode(ScriptPlayMode mode)
+        {
             var setting = Settings.GetDefaultSettings();
-            Menu.SetChecked(kResourceMenuPrefix + "Package Mode", setting.scriptPlayMode == ScriptPlayMode.Preload);
+            setting.scriptPlayMode = mode;
+            UnityEditor.EditorUtility.SetDirty(setting);
+        }
+
+        private static bool ValidateScriptPlayMode(string menuName, ScriptPlayMode mode)
+        {
+            var setting = Settings.GetDefaultSettings();
+            Menu.SetChecked(kUAssetToolMenu + menuName, setting.scriptPlayMode == mode);
             return true;
         }
         
-        [MenuItem(kResourceMenuPrefix + "Updatable Mode", priority = -10)]
-        public static void UpdatableModeMenu()
-        {
-            var setting = Settings.GetDefaultSettings();
-            setting.scriptPlayMode = ScriptPlayMode.Increment;
-            UnityEditor.EditorUtility.SetDirty(setting);
-        }
-        [MenuItem(kResourceMenuPrefix + "Updatable Mode", validate = true)]
-        public static bool UpdatableModeMenu_Validate()
-        {
-            var setting = Settings.GetDefaultSettings();
-            Menu.SetChecked(kResourceMenuPrefix + "Updatable Mode", setting.scriptPlayMode == ScriptPlayMode.Increment);
-            return true;
-        }
+        #endregion
 
-        [MenuItem(kBuildPreix + "Copy Build to StreamingAssets", false, 50)]
+        [MenuItem(kUAssetToolMenu + "Copy Build to StreamingAssets", false, 50)]
         public static void CopyBuildToStreamingAssets()
         {
             BuildScript.CopyToStreamingAssets(PackageResourceType.Full);
         }
 
-        [MenuItem(kBuildPreix + "Clear Build", false, 800)]
+        [MenuItem(kUAssetToolMenu + "Clear Build", false, 800)]
         public static void ClearBuild()
         {
             BuildScript.ClearBuild();
         }
 
-        [MenuItem(kBuildPreix + "Clear Build from selection", false, 800)]
+        [MenuItem(kUAssetToolMenu + "Clear Build from selection", false, 800)]
         public static void ClearBuildFromSelection()
         {
             BuildScript.ClearBuildFromSelection();
         }
 
-        [MenuItem(kBuildPreix + "Clear History(打包目录只留下当前版本的资源)", false, 800)]
+        [MenuItem(kUAssetToolMenu + "Clear History(打包目录只留下当前版本的资源)", false, 800)]
         public static void ClearHistory()
         {
             BuildScript.ClearHistory();
         }
         
-        [MenuItem(kBuildPreix + "Clear Download(清理下载目录)", false, 800)]
+        [MenuItem(kUAssetToolMenu + "Clear Download(清理下载目录)", false, 800)]
         public static void ClearDownload()
         {
             Versions.ClearDownload();
         }
         
-        [MenuItem(kBuildPreix + "Select UAsset Settings", false, 850)]
+        [MenuItem(kUAssetToolMenu + "Select UAsset Settings", false, 850)]
         public static void SelectSettings()
         {
             var settings = Settings.GetDefaultSettings();

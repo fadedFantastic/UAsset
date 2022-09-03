@@ -90,7 +90,7 @@ namespace UAsset
         /// <summary>
         ///     语言列表
         /// </summary>
-        public static List<string> Languages { get; private set; }
+        public static string[] Languages { get; private set; }
 
         /// <summary>
         ///     获取清单的版本号
@@ -161,7 +161,7 @@ namespace UAsset
             // 记录变体版本号
             VariantVersions.Clear();
             var languages = versions.languages;
-            for(var i = 0; i < languages.Count; ++i)
+            for(var i = 0; i < languages.Length; ++i)
             {
                 VariantVersions.Add(languages[i], versions.variantVersion[i]);
             }

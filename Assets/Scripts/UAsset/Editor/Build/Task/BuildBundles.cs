@@ -92,7 +92,7 @@ namespace UAsset.Editor
             UnityEditor.EditorUtility.ClearProgressBar();
         }
 
-        protected AssetBundleBuild[] GetBuilds()
+        private AssetBundleBuild[] GetBuilds()
         {
             return bundles.ConvertAll(bundle =>
                 new AssetBundleBuild
@@ -187,7 +187,7 @@ namespace UAsset.Editor
 
             foreach (var bundle in ruleBundles)
             {
-                if (bundle.IsLoadFromBinary)
+                if (bundle.IsRawFile)
                 {
                     rawBundles.Add(bundle);  
                 }

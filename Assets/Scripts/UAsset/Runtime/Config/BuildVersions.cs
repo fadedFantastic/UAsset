@@ -38,7 +38,7 @@ namespace UAsset
         /// <summary>
         ///     语言列表
         /// </summary>
-        public List<string> languages;
+        public string[] languages;
 
         /// <summary>
         ///     变体版本号

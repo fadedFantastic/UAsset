@@ -8,7 +8,7 @@ namespace UAsset.Editor
 {
     public sealed class Settings : ScriptableObject
     {
-        private const string kSettingPath = "Assets/Scripts/Settings.asset";
+        private const string kSettingPath = "Assets/Scripts/UAsset/Settings.asset";
         public static string BundleExtension { get; set; } = ".bundle";
 
         public bool requestCopy;

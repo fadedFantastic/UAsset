@@ -15,7 +15,7 @@ namespace UAsset.Editor
         private string _destinationPath = string.Empty;
         private string _decryptDirName = "Decrypt";
 
-        [MenuItem(MenuItems.kBuildPreix + "解密bundle包工具", false, 55)]
+        [MenuItem(MenuItems.kUAssetToolMenu + "解密bundle包工具", false, 55)]
         static void ShowWindow()
         {
             if (_thisInstance == null)

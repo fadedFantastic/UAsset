@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9e9ca5b8c7923e4fa378ac0b6fa8fe2, type: 3}
+  m_Name: BuildRules
+  m_EditorClassIdentifier: 
+  variantRootPath: Arts/Variant
+  variantRules:
+  - valid: 1
+    searchPath: 
+    searchPattern: '*.prefab'
+    tag: 
+    packRule: 1
+    assetBundleName: 
+    packed: 1
+  variantDirNames:
+  - cn
+  - en
+  - jp
+  rules:
+  - valid: 1
+    searchPath: Res
+    searchPattern: '*.prefab'
+    tag: 
+    packRule: 1
+    assetBundleName: 
+    packed: 1
+  ruleAssets: []
+  ruleBundles: []
+  abExtName: ab

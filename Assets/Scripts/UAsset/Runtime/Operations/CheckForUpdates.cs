@@ -62,7 +62,7 @@ namespace UAsset
             // 首次安装时，下载目录暂不存在本地版本文件
             var variantVersion = localVersion.variantVersion ?? severVersion.variantVersion;
             var languageList = severVersion.languages;
-            for (var i = 0; i < languageList.Count; ++i)
+            for (var i = 0; i < languageList.Length; ++i)
             {
                 if (languageList[i] == Versions.CurrentVariant)
                 {

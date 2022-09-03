@@ -6,56 +6,20 @@ using System.Security.Cryptography;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UAsset.Editor
 {
     /// <summary>
-    /// 资源加载方式类型。
+    /// 打包规则
     /// </summary>
-    public enum LoadType : byte
+    public enum PackRule
     {
-        /// <summary>
-        /// 使用文件方式加载。
-        /// </summary>
-        LoadFromFile = 0,
-
-        /// <summary>
-        /// 使用内存方式加载。
-        /// </summary>
-        LoadFromMemory,
-
-        /// <summary>
-        /// 使用内存快速解密方式加载。
-        /// </summary>
-        LoadFromMemoryAndQuickDecrypt,
-
-        /// <summary>
-        /// 使用内存解密方式加载。
-        /// </summary>
-        LoadFromMemoryAndDecrypt,
-
-        /// <summary>
-        /// 使用二进制方式加载。
-        /// </summary>
-        LoadFromBinary,
-
-        /// <summary>
-        /// 使用二进制快速解密方式加载。
-        /// </summary>
-        LoadFromBinaryAndQuickDecrypt,
-
-        /// <summary>
-        /// 使用二进制解密方式加载。
-        /// </summary>
-        LoadFromBinaryAndDecrypt
-    }
-    
-    public enum NameBy
-    {
-        Explicit, // 显示指定bundle名
-        Path,     // 文件路径为bundle名（每个文件打独立bundle）
-        Directory, // 最后一层目录为bundle名（文件夹下所有的文件打成一个bundle）
-        TopDirectory // 规则路径的顶层目录为bundle名（文件夹下所有的文件打成一个bundle）
+        PackExplicit,       // 显示指定bundle名
+        PackSeparately,     // 文件路径为bundle名（每个文件打独立bundle）
+        PackByDirectory,    // 最后一层目录为bundle名（文件夹下所有的文件打成一个bundle）
+        PackByTopDirectory, // 规则路径的顶层目录为bundle名（文件夹下所有的文件打成一个bundle)
+        PackRawFile         // 原生文件    
     }
 
     [Serializable]
@@ -71,16 +35,13 @@ namespace UAsset.Editor
     public class RuleBundle
     {
         public string name;
-        public LoadType loadType = LoadType.LoadFromFile;
         public bool packed = true;
         public string[] assets;
         public string variant;
-        public string fileSystem; //todo
         public string tag;
+        public bool packByRaw;
 
-        public bool IsLoadFromBinary => loadType == LoadType.LoadFromBinary || 
-                                        loadType == LoadType.LoadFromBinaryAndQuickDecrypt || 
-                                        loadType == LoadType.LoadFromBinaryAndDecrypt;
+        public bool IsRawFile => packByRaw;
     }
 
     [Serializable]
@@ -92,153 +53,94 @@ namespace UAsset.Editor
 
         [Tooltip("搜索路径")] public string searchPath;
 
-        public string GetFullSearchPath()
-        {
-            return Path.Combine(prefixPath, searchPath);
-        }
-
         [Tooltip("搜索通配符，多个之间请用,(逗号)隔开")] public string searchPattern = "*.prefab";
         
-        [Tooltip("资源标签(非重要资源，打了标签热更时会忽略)")] public string tag = string.Empty;
+        [Tooltip("资源分组标签（打了标签热更时会忽略)")] public string tag = string.Empty;
 
-        [Tooltip("命名规则")] public NameBy nameBy = NameBy.Path;
+        [Tooltip("打包规则")] public PackRule packRule = PackRule.PackSeparately;
 
         [Tooltip("Explicit的名称")] public string assetBundleName;
 
-        public LoadType loadType;
+        [Tooltip("是否进安装包")] public bool packed = true;
 
-        public bool packed;
-
+        /// <summary>
+        /// 获取搜索路径下的资源
+        /// </summary>
+        /// <returns></returns>
         public string[] GetAssets()
         {
-            if (!valid) return new string[0];
+            if (!valid) return Array.Empty<string>();
 
-            var _searchPath = GetFullSearchPath();
+            var path = GetFullSearchPath();
             var patterns = searchPattern.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
-            if (!Directory.Exists(_searchPath))
+            if (!Directory.Exists(path))
             {
-                Debug.LogWarning("Rule searchPath not exist:" + _searchPath);
-                return new string[0];
+                Debug.LogError("Rule searchPath not exist: " + path);
+                return Array.Empty<string>();
             }
 
             var getFiles = new List<string>();
-            foreach (var item in patterns)
+            foreach (var pattern in patterns)
             {
-                var files = Directory.GetFiles(_searchPath, item, SearchOption.AllDirectories);
+                var files = Directory.GetFiles(path, pattern, SearchOption.AllDirectories);
                 foreach (var file in files)
                 {
                     if (Directory.Exists(file)) continue;
                     var ext = Path.GetExtension(file).ToLower();
-                    if ((ext == ".fbx" || ext == ".anim") && !item.Contains(ext)) continue;
+                    if (!pattern.Contains(ext)) continue;
                     if (!BuildRules.ValidateAsset(file)) continue;
-                    var asset =  PathManager.GetRegularPath(file);
+                    var asset = PathManager.GetRegularPath(file);
                     getFiles.Add(asset);
                 }
             }
 
             return getFiles.ToArray();
         }
+        
+        /// <summary>
+        /// 获取搜索全路径
+        /// </summary>
+        public string GetFullSearchPath()
+        {
+            return Path.Combine(prefixPath, searchPath);
+        }
     }
 
     public class BuildRules : ScriptableObject
     {
-        public static string ruleConfigPath = "Assets/Scripts/Framework/Manager/ResourceSystem/ResourceCustomConfigs/Config.asset";
+        public static string ruleConfigPath = "Assets/Scripts/UAsset/BuildRules.asset";
         
+        /// <summary>
+        /// 资源和bundle的映射表
+        /// </summary>
         private readonly Dictionary<string, string> _asset2Bundles = new Dictionary<string, string>();
 
-        private readonly Dictionary<string, BuildRule>
-            _bundlesRule = new Dictionary<string, BuildRule>(); //记录这个bundle用了哪条规则
+        /// <summary>
+        /// //记录这个bundle用了哪条规则
+        /// </summary>
+        private readonly Dictionary<string, BuildRule> _bundlesRule = new Dictionary<string, BuildRule>();
 
         private readonly Dictionary<string, string[]> _conflicted = new Dictionary<string, string[]>();
-        private readonly Dictionary<string, string> _duplicated = new Dictionary<string, string>(); //被相同bundle依赖的资源
+        
+        /// <summary>
+        /// 被相同bundle依赖的资源
+        /// </summary>
+        private readonly Dictionary<string, string> _duplicated = new Dictionary<string, string>();
         private readonly Dictionary<string, HashSet<string>> _tracker = new Dictionary<string, HashSet<string>>();
 
         //暂时先支持一个变体路径也省的乱
-        public string variantPath = null;
+        public string variantRootPath;
         public List<BuildRule> variantRules = new List<BuildRule>();
-        public List<string> variantDirNames;
+        public string[] variantDirNames;
         
         public List<BuildRule> rules = new List<BuildRule>();
-        [Header("Assets")] public RuleAsset[] ruleAssets = new RuleAsset[0];
-        public RuleBundle[] ruleBundles = new RuleBundle[0];
-
-        // 为了解决Bundle和文件夹同名冲突
-        public string abExtName = "ab";
-
-        #region API
-
-        public string GetVariantPath()
-        {
-            if (string.IsNullOrEmpty(variantPath))
-            {
-                return variantPath;
-            }
-            var path = Path.Combine(Application.dataPath, variantPath);
-            path = PathManager.GetRegularPath(path);
-            return path;
-        }
+        [Header("Assets")] public RuleAsset[] ruleAssets;
+        public RuleBundle[] ruleBundles;
 
         /// <summary>
-        /// 获取变体目录名
+        /// bundle扩展名 (为了解决Bundle和文件夹同名冲突)
         /// </summary>
-        /// <returns></returns>
-        private List<string> GetVariantDirNames()
-        {
-            if (variantPath == null)
-            {
-                throw new Exception("No Variant Path");
-            }
-            
-            var path = Path.Combine(Application.dataPath, variantPath);
-            var directory = new DirectoryInfo(path);
-            return directory
-                .GetDirectories()
-                .Select(subDir => subDir.Name)
-                .ToList();
-        }
-
-        //variantPath 第一层子目录作为变体种类
-        public string[] GetVariants()
-        {
-            if (string.IsNullOrEmpty(variantPath))
-            {
-                return new string[0];
-            }
-
-            var path = GetVariantPath();
-            if (string.IsNullOrEmpty(path))
-            {
-                return new string[0];
-            }
-            var vs = Directory.GetDirectories(path);
-            for (int i = 0; i < vs.Length; i++)
-            {
-                if (vs[i].StartsWith(path))
-                {
-                    vs[i] = vs[i].Substring(path.Length + 1);
-                }
-            }
-
-            return vs;
-        }
-        private string GetVariant(string s)
-        {
-            var variantPath = GetVariantPath();
-            if (string.IsNullOrEmpty(variantPath)) return string.Empty;
-            var path = PathManager.GetRegularPath(Path.GetFullPath(s));
-            if (string.IsNullOrEmpty(path)) return "";
-            if (!path.StartsWith(variantPath)) return "";
-            var vs = Directory.GetDirectories(variantPath);
-            for (int i = 0; i < vs.Length; i++)
-            {
-                var v = PathManager.GetRegularPath(vs[i]);
-                if (path.StartsWith(v))
-                {
-                    return v.Substring(variantPath.Length + 1);
-                }
-            }
-            return string.Empty;
-        }
+        public string abExtName = "ab";
 
         public void Apply()
         {
@@ -258,43 +160,57 @@ namespace UAsset.Editor
                 UnityEditor.EditorUtility.ClearProgressBar();
             }
         }
-
-        public AssetBundleBuild[] GetBuilds()
+        
+        /// <summary>
+        /// 收集打包资源
+        /// </summary>
+        private void CollectAssets()
         {
-            var builds = new List<AssetBundleBuild>();
-            foreach (var bundle in ruleBundles)
+            for (int i = 0, max = rules.Count; i < max; i++)
             {
-                builds.Add(new AssetBundleBuild
-                {
-                    assetNames = bundle.assets,
-                    assetBundleName = bundle.name,
-                    assetBundleVariant = bundle.variant
-                });
+                var rule = rules[i];
+                if (UnityEditor.EditorUtility.DisplayCancelableProgressBar($"收集资源{i}/{max}", rule.searchPath, i / (float) max))
+                    break;
+                
+                rule.prefixPath = "Assets/";
+                ApplyRule(rule);
             }
 
-            return builds.ToArray();
+            variantDirNames = GetVariantDirNames();
+            foreach (var v in variantDirNames)
+            {
+                for (int i = 0, max = variantRules.Count; i < max; i++)
+                {
+                    var rule = variantRules[i];
+                    if (UnityEditor.EditorUtility.DisplayCancelableProgressBar($"收集资源{i}/{max}", rule.searchPath, i / (float) max))
+                        break;
+                    
+                    rule.prefixPath = Path.Combine("Assets", variantRootPath, v);
+                    ApplyRule(rule);
+                }
+            }
         }
 
-        #endregion
-
-        #region Private
-
-        internal static bool ValidateAsset(string asset)
+        // TODO: 这个方法还比较糙
+        /// <summary>
+        /// 验证资源合法性
+        /// </summary>
+        /// <param name="assetPath"></param>
+        /// <returns></returns>
+        internal static bool ValidateAsset(string assetPath)
         {
-            asset = PathManager.GetRegularPath(asset);
-            if (!asset.StartsWith("Assets/")) return false;
+            assetPath = PathManager.GetRegularPath(assetPath);
+            if (!assetPath.StartsWith("Assets/")) return false;
 
-            var ext = Path.GetExtension(asset).ToLower();
-            if (ext == "*.dll" && !asset.StartsWith("Assets/ResourcesAssets/")) return false;
+            var ext = Path.GetExtension(assetPath).ToLower();
             if (ext == ".cs" || ext == ".meta" || ext == ".js" || ext == ".boo")
             {
                 return false;
             }
             //排除LightMap
-            var isAsset = ext == ".asset";
-            if (isAsset)
+            if (ext == ".asset")
             {
-                return !(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(asset) is LightingDataAsset);
+                return !(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath) is LightingDataAsset);
             }
 
             return true;
@@ -308,30 +224,19 @@ namespace UAsset.Editor
         private string GetOriginPath(string path)
         {
             if (string.IsNullOrEmpty(path)) return null;
-            var n2v = path.Split('.');
-            if (n2v.Length > 0)
+            var splits = path.Split('.');
+            if (splits.Length > 0)
             {
-                return $"{n2v[0]}_{abExtName}";
-            }
-            return null;
-        }
-        
-        private string GetVariantFromPath(string path)
-        {
-            if (string.IsNullOrEmpty(path)) return null;
-            var n2v = path.Split('.');
-            if (n2v.Length > 1)
-            {
-                return n2v[1];
+                return $"{splits[0]}_{abExtName}";
             }
             return null;
         }
 
-        private string MakeBundleName(string name, string variant)
+        private string MakeBundleName(string path, string variant)
         {
-            if (string.IsNullOrEmpty(name)) return null;
+            if (string.IsNullOrEmpty(path)) return null;
             
-            var assetBundle = PathManager.GetRegularPath(name);
+            var assetBundle = PathManager.GetRegularPath(path);
             assetBundle = assetBundle.Replace(' ', '_');
             assetBundle = assetBundle.Replace('.', '_');
             
@@ -362,14 +267,14 @@ namespace UAsset.Editor
             foreach (var item in _asset2Bundles)
             {
                 var bundle = item.Value;
-                List<string> list;
-                if (!bundles.TryGetValue(bundle, out list))
+                if (!bundles.TryGetValue(bundle, out var list))
                 {
                     list = new List<string>();
                     bundles[bundle] = list;
                 }
 
-                if (!list.Contains(item.Key)) list.Add(item.Key);
+                if (!list.Contains(item.Key)) 
+                    list.Add(item.Key);
             }
 
             return bundles;
@@ -430,9 +335,13 @@ namespace UAsset.Editor
                     _conflicted.Add(bundle, assetPaths.ToArray());
                 var dependencies = AssetDatabase.GetDependencies(assetPaths.ToArray(), true);
                 if (dependencies.Length > 0)
+                {
                     foreach (var asset in dependencies)
+                    {
                         if (ValidateAsset(asset) && !IsScene(asset))
                             Track(asset, bundle);
+                    }
+                }
                 i++;
             }
 
@@ -440,8 +349,7 @@ namespace UAsset.Editor
             {
                 if (assets.Value.Count > 1) //如果资源被两个以上bundle包含
                 {
-                    string bundleName;
-                    _asset2Bundles.TryGetValue(assets.Key, out bundleName);
+                    _asset2Bundles.TryGetValue(assets.Key, out var bundleName);
                     if (string.IsNullOrEmpty(bundleName))
                     {
                         // 为被多个bundle依赖的asset生成bundle名，并存储
@@ -466,43 +374,12 @@ namespace UAsset.Editor
             using (var md5 = MD5.Create())
             {
                 var hash = md5.ComputeHash(Encoding.Default.GetBytes(s.ToString()));
-                return "Shared/" + new Guid(hash).ToString();
+                return "Shared/" + new Guid(hash);
             }
-        }
-
-        private void CollectAssets()
-        {
-            for (int i = 0, max = rules.Count; i < max; i++)
-            {
-                var rule = rules[i];
-                if (UnityEditor.EditorUtility.DisplayCancelableProgressBar(string.Format("收集资源{0}/{1}", i, max), rule.searchPath,
-                    i / (float) max))
-                    break;
-                rule.prefixPath = "Assets/";
-                ApplyRule(rule);
-            }
-
-            var vs = GetVariants();
-            foreach (var v in vs)
-            {
-                for (int i = 0, max = variantRules.Count; i < max; i++)
-                {
-                    var rule = variantRules[i];
-                    if (UnityEditor.EditorUtility.DisplayCancelableProgressBar(string.Format("收集资源{0}/{1}", i, max),
-                        rule.searchPath,
-                        i / (float) max))
-                        break;
-                    rule.prefixPath = Path.Combine("Assets", variantPath, v);
-                    ApplyRule(rule);
-                }
-            }
-            
-            variantDirNames = GetVariantDirNames();
         }
 
         private void MakeBundleList()
         {
-            
             var getBundles = GetBundles();
             ruleBundles = new RuleBundle[getBundles.Count];
             var i = 0;
@@ -514,11 +391,11 @@ namespace UAsset.Editor
                     
                 };
                 ruleBundles[i].name = GetOriginPath(item.Key);
-                ruleBundles[i].variant = GetVariantFromPath(item.Key);
+                ruleBundles[i].variant = GetVariantNameFromPath(item.Key);
                 if (_bundlesRule.ContainsKey(item.Key))
                 {
                     ruleBundles[i].packed = _bundlesRule[item.Key].packed;
-                    ruleBundles[i].loadType = _bundlesRule[item.Key].loadType;
+                    ruleBundles[i].packByRaw = _bundlesRule[item.Key].packRule == PackRule.PackRawFile;
                     ruleBundles[i].tag = _bundlesRule[item.Key].tag;
                 }
                 i++;
@@ -539,7 +416,7 @@ namespace UAsset.Editor
                 
                 list.Add(asset);
                 asset.bundle = GetOriginPath(item.Value);
-                asset.resourceVariant = GetVariantFromPath(item.Value);
+                asset.resourceVariant = GetVariantNameFromPath(item.Value);
             }
             list.Sort((a, b) => string.Compare(a.assetName, b.assetName, StringComparison.Ordinal));
             ruleAssets = list.ToArray();
@@ -550,14 +427,11 @@ namespace UAsset.Editor
             var asset = assetKp.Key;
             var depBundle = assetKp.Value;
             if (asset.EndsWith(".shader"))
-                _asset2Bundles[asset] = MakeBundleName("shaders",null);
+                _asset2Bundles[asset] = MakeBundleName("shaders", null);
             else
             {
-                //直接把被依赖资源单独打包
-                // _asset2Bundles[asset] = MakeBundleName(asset, GetVariant(asset));
-                
-                //优化 把依赖相同的资源打到同一个bundle
-                _asset2Bundles[asset] = MakeBundleName(depBundle, GetVariant(asset));
+                // 把依赖相同的资源打到同一个bundle
+                _asset2Bundles[asset] = MakeBundleName(depBundle, GetVariantName(asset));
             }
         }
 
@@ -576,43 +450,43 @@ namespace UAsset.Editor
         private void ApplyRule(BuildRule rule)
         {
             var assets = rule.GetAssets();
-            switch (rule.nameBy)
+            switch (rule.packRule)
             {
-                case NameBy.Explicit:
+                case PackRule.PackExplicit:
                 {
                     Debug.Assert(!string.IsNullOrEmpty(rule.assetBundleName),$" {rule} 需要指定 assetBundleName");
                     foreach (var asset in assets)
                     {
-                        _asset2Bundles[asset] = MakeBundleName(rule.assetBundleName, GetVariant(asset));
+                        _asset2Bundles[asset] = MakeBundleName(rule.assetBundleName, GetVariantName(asset));
                         UpdateBundleRule(_asset2Bundles[asset], rule);
                     }
 
                     break;
                 }
-                case NameBy.Path:
+                case PackRule.PackSeparately:
                 {
                     foreach (var asset in assets)
                     {
-                        var assetName = asset;
-                        var variant = GetVariant(asset);
+                        var assetPath = asset;
+                        var variant = GetVariantName(asset);
                         // 保证变体bundle名一致
                         if (!string.IsNullOrEmpty(variant))
                         {
-                            assetName = assetName.Replace($"/{variant}", "");
+                            assetPath = assetPath.Replace($"/{variant}", "");
                         }
                         
-                        _asset2Bundles[asset] = MakeBundleName(assetName, variant);
+                        _asset2Bundles[asset] = MakeBundleName(assetPath, variant);
                         UpdateBundleRule(_asset2Bundles[asset], rule);
                     }
 
                     break;
                 }
-                case NameBy.Directory:
+                case PackRule.PackByDirectory:
                 {
                     foreach (var asset in assets)
                     {
                         var dir = Path.GetDirectoryName(asset);
-                        var variant = GetVariant(asset);
+                        var variant = GetVariantName(asset);
                         // 保证变体bundle名一致
                         if (!string.IsNullOrEmpty(variant))
                         {
@@ -625,7 +499,7 @@ namespace UAsset.Editor
 
                     break;
                 }
-                case NameBy.TopDirectory:
+                case PackRule.PackByTopDirectory:
                 {
                     var rs =  PathManager.GetRegularPath(rule.GetFullSearchPath());
                     var startIndex = rs.Length;
@@ -639,17 +513,92 @@ namespace UAsset.Editor
                                 if (pos != -1) dir = dir.Substring(0, pos);
                             }
 
-                        _asset2Bundles[asset] = MakeBundleName(dir, GetVariant(dir));
+                        _asset2Bundles[asset] = MakeBundleName(dir, GetVariantName(dir));
                         UpdateBundleRule(_asset2Bundles[asset], rule);
                     }
 
                     break;
                 }
+                case PackRule.PackRawFile: // 不处理原生文件
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
+        
+        #region 处理变体
+        
+        /// <summary>
+        /// 获取变体路径
+        /// </summary>
+        /// <returns></returns>
+        private string GetVariantPath()
+        {
+            if (string.IsNullOrEmpty(variantRootPath))
+            {
+                return variantRootPath;
+            }
+            var path = Path.Combine(Application.dataPath, variantRootPath);
+            path = PathManager.GetRegularPath(path);
+            return path;
+        }
 
+        /// <summary>
+        /// 获取变体目录名（变体根目录下第一层子目录作为变体种类）
+        /// </summary>
+        /// <returns></returns>
+        public string[] GetVariantDirNames()
+        {
+            if (variantRootPath == null)
+            {
+                return Array.Empty<string>();
+            }
+            
+            var path = GetVariantPath();
+            var directory = new DirectoryInfo(path);
+            return directory
+                .GetDirectories()
+                .Select(subDir => subDir.Name)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// 获取资源的变体名
+        /// </summary>
+        /// <param name="assetPath">资源路径</param>
+        /// <returns>变体则返回变体目录名;非变体返回“”</returns>
+        private string GetVariantName(string assetPath)
+        {
+            var variantPath = GetVariantPath();
+            if (string.IsNullOrEmpty(variantPath)) return string.Empty;
+            
+            var path = PathManager.GetRegularPath(Path.GetFullPath(assetPath));
+            if (string.IsNullOrEmpty(path) || !path.StartsWith(variantPath)) return string.Empty;
+            
+            var subDirs = Directory.GetDirectories(variantPath);
+            foreach (var dir in subDirs)
+            {
+                var d = PathManager.GetRegularPath(dir);
+                if (path.StartsWith(d))
+                {
+                    return d.Substring(variantPath.Length + 1);
+                }
+            }
+            return string.Empty;
+        }
+        
+        /// <summary>
+        /// 从路径中获取变体名
+        /// </summary>
+        /// <param name="path">路径</param>
+        /// <returns>变体名</returns>
+        private string GetVariantNameFromPath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            var splits = path.Split('.');
+            return splits.Length > 1 ? splits[1] : null;
+        }
+        
         #endregion
     }
 }

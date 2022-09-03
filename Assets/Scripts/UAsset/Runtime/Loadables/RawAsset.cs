@@ -49,6 +49,12 @@ namespace UAsset
                 return;
             }
 
+            if (!_info.isRaw)
+            {
+                Finish("Cannot load asset bundle file using RawAsset");
+                return;
+            }
+
             if (Versions.IsDownloaded(_info))
             {
                 LoadFinish();
