@@ -53,8 +53,6 @@ namespace UAsset.Editor
 
         [Tooltip("搜索路径")] public string searchPath;
 
-        [Tooltip("搜索通配符，多个之间请用,(逗号)隔开")] public string searchPattern = "*.prefab";
-        
         [Tooltip("资源分组标签（打了标签热更时会忽略)")] public string tag = string.Empty;
 
         [Tooltip("打包规则")] public PackRule packRule = PackRule.PackSeparately;
@@ -62,6 +60,8 @@ namespace UAsset.Editor
         [Tooltip("Explicit的名称")] public string assetBundleName;
 
         [Tooltip("是否进安装包")] public bool packed = true;
+
+        [Tooltip("文件过滤规则")] public string filterRule = nameof(CollectAll);
 
         /// <summary>
         /// 获取搜索路径下的资源
@@ -72,7 +72,6 @@ namespace UAsset.Editor
             if (!valid) return Array.Empty<string>();
 
             var path = GetFullSearchPath();
-            var patterns = searchPattern.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
             if (!Directory.Exists(path))
             {
                 Debug.LogError("Rule searchPath not exist: " + path);
@@ -80,18 +79,14 @@ namespace UAsset.Editor
             }
 
             var getFiles = new List<string>();
-            foreach (var pattern in patterns)
+            var files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
+            foreach (var file in files)
             {
-                var files = Directory.GetFiles(path, pattern, SearchOption.AllDirectories);
-                foreach (var file in files)
-                {
-                    if (Directory.Exists(file)) continue;
-                    var ext = Path.GetExtension(file).ToLower();
-                    if (!pattern.Contains(ext)) continue;
-                    if (!BuildRules.ValidateAsset(file)) continue;
-                    var asset = PathManager.GetRegularPath(file);
-                    getFiles.Add(asset);
-                }
+                var filter = FileFilterRule.GetFilterRuleInstance(filterRule);
+                if(!BuildRules.IsValidAsset(file) || !filter.IsCollectAsset(file)) continue;
+                
+                var asset = PathManager.GetRegularPath(file);
+                getFiles.Add(asset);
             }
 
             return getFiles.ToArray();
@@ -108,6 +103,9 @@ namespace UAsset.Editor
 
     public class BuildRules : ScriptableObject
     {
+        /// <summary>
+        /// 规则配置文件存储路径
+        /// </summary>
         public static string ruleConfigPath = "Assets/Scripts/UAsset/BuildRules.asset";
         
         /// <summary>
@@ -116,16 +114,23 @@ namespace UAsset.Editor
         private readonly Dictionary<string, string> _asset2Bundles = new Dictionary<string, string>();
 
         /// <summary>
-        /// //记录这个bundle用了哪条规则
+        /// 记录这个bundle用了哪条规则
         /// </summary>
         private readonly Dictionary<string, BuildRule> _bundlesRule = new Dictionary<string, BuildRule>();
 
+        /// <summary>
+        /// 记录场景目录下的资源
+        /// </summary>
         private readonly Dictionary<string, string[]> _conflicted = new Dictionary<string, string[]>();
         
         /// <summary>
-        /// 被相同bundle依赖的资源
+        /// 被多个bundle依赖的共享资源(asset-bundle名映射表)
         /// </summary>
-        private readonly Dictionary<string, string> _duplicated = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _shared = new Dictionary<string, string>();
+        
+        /// <summary>
+        /// asset-依赖bundle映射表
+        /// </summary>
         private readonly Dictionary<string, HashSet<string>> _tracker = new Dictionary<string, HashSet<string>>();
 
         //暂时先支持一个变体路径也省的乱
@@ -150,7 +155,7 @@ namespace UAsset.Editor
                 CollectAssets();
                 AnalysisAssets();
                 OptimizeAssets();
-                MakeAssetList();
+                MakeRuleAssetList();
                 MakeBundleList();
                 Save();
             }
@@ -191,59 +196,183 @@ namespace UAsset.Editor
             }
         }
 
-        // TODO: 这个方法还比较糙
         /// <summary>
-        /// 验证资源合法性
+        /// 分析资源
+        /// </summary>
+        private void AnalysisAssets()
+        {
+            var getBundles = GetBundles();
+            int i = 0, max = getBundles.Count;
+            foreach (var item in getBundles)
+            {
+                var bundle = item.Key;
+                if (UnityEditor.EditorUtility.DisplayCancelableProgressBar($"分析依赖{i}/{max}", bundle, i / (float) max)) 
+                    break;
+                
+                var assetPaths = getBundles[bundle];
+                if (assetPaths.Exists(IsScene) && !assetPaths.TrueForAll(IsScene))
+                    _conflicted.Add(bundle, assetPaths.ToArray());
+                
+                // 记录bundle依赖的资源
+                var dependencies = AssetDatabase.GetDependencies(assetPaths.ToArray(), true);
+                if (dependencies.Length > 0)
+                {
+                    foreach (var asset in dependencies)
+                    {
+                        if (IsValidAsset(asset) && !IsScene(asset))
+                            Track(asset, bundle);
+                    }
+                }
+                i++;
+            }
+
+            foreach (var map in _tracker)
+            {
+                if (map.Value.Count > 1) //如果资源被两个以上bundle包含
+                {
+                    _asset2Bundles.TryGetValue(map.Key, out var bundleName);
+                    if (string.IsNullOrEmpty(bundleName)) // 资源尚未被加进任何bungle
+                    {
+                        // 为被多个bundle依赖的asset生成bundle名，并存储
+                        _shared.Add(map.Key, MakeSharedBundleName(map.Value));
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 优化资源分析
+        /// </summary>
+        private void OptimizeAssets()
+        {
+            int i = 0, max = _conflicted.Count;
+            foreach (var item in _conflicted)
+            {
+                if (UnityEditor.EditorUtility.DisplayCancelableProgressBar($"优化冲突{i}/{max}", item.Key, i / (float) max)) 
+                    break;
+                
+                var list = item.Value;
+                foreach (var asset in list)
+                {
+                    if (!IsScene(asset)) // 场景目录下的非场景资源打成一个共享bundle
+                        _shared.Add(asset, item.Key + "_ext");
+                }
+                i++;
+            }
+
+            i = 0; max = _shared.Count;
+            foreach (var item in _shared)
+            {
+                if (UnityEditor.EditorUtility.DisplayCancelableProgressBar($"优化冗余{i}/{max}", item.Key, i / (float) max)) 
+                    break;
+                
+                var asset = item.Key;
+                var bundle = item.Value;
+                if (asset.EndsWith(".shader"))
+                {
+                    // 所有被共享的shader资源打成一个bundle
+                    _asset2Bundles[asset] = MakeBundleName("shaders", null);
+                }
+                else
+                {
+                    // 把依赖相同的资源打到同一个bundle
+                    _asset2Bundles[asset] = MakeBundleName(bundle, GetVariantName(asset));
+                }
+
+                i++;
+            }
+        }
+        
+        /// <summary>
+        /// 创建资源列表
+        /// </summary>
+        private void MakeRuleAssetList()
+        {
+            var list = new List<RuleAsset>();
+            foreach (var item in _asset2Bundles)
+            {
+                var asset = new RuleAsset
+                {
+                    assetName = item.Key,
+                    guid = AssetDatabase.AssetPathToGUID(item.Key),
+                    bundle = GetBundleName(item.Value),
+                    resourceVariant = GetVariantNameFromPath(item.Value)
+                };
+
+                list.Add(asset);
+            }
+            list.Sort((a, b) => string.Compare(a.assetName, b.assetName, StringComparison.Ordinal));
+            ruleAssets = list.ToArray();
+        }
+        
+        /// <summary>
+        /// 创建bundle列表
+        /// </summary>
+        private void MakeBundleList()
+        {
+            var getBundles = GetBundles();
+            ruleBundles = new RuleBundle[getBundles.Count];
+            var i = 0;
+            foreach (var item in getBundles)
+            {
+                ruleBundles[i] = new RuleBundle
+                {
+                    assets = item.Value.ToArray(),
+                    name = GetBundleName(item.Key),
+                    variant = GetVariantNameFromPath(item.Key)
+                };
+                
+                if (_bundlesRule.ContainsKey(item.Key))
+                {
+                    ruleBundles[i].packed = _bundlesRule[item.Key].packed;
+                    ruleBundles[i].packByRaw = _bundlesRule[item.Key].packRule == PackRule.PackRawFile;
+                    ruleBundles[i].tag = _bundlesRule[item.Key].tag;
+                }
+                i++;
+            }
+        }
+        
+        /// <summary>
+        /// 是否是合法资源
         /// </summary>
         /// <param name="assetPath"></param>
         /// <returns></returns>
-        internal static bool ValidateAsset(string assetPath)
+        internal static bool IsValidAsset(string assetPath)
         {
-            assetPath = PathManager.GetRegularPath(assetPath);
-            if (!assetPath.StartsWith("Assets/")) return false;
-
-            var ext = Path.GetExtension(assetPath).ToLower();
-            if (ext == ".cs" || ext == ".meta" || ext == ".js" || ext == ".boo")
+            if (assetPath.StartsWith("Assets/") == false && assetPath.StartsWith("Packages/") == false)
             {
+                Debug.LogError($"Invalid asset path : {assetPath}");
                 return false;
             }
-            //排除LightMap
-            if (ext == ".asset")
+            if (assetPath.Contains("/Gizmos/"))
             {
-                return !(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath) is LightingDataAsset);
+                Debug.LogWarning($"Cannot pack gizmos asset : {assetPath}");
+                return false;
             }
+
+            if (AssetDatabase.IsValidFolder(assetPath))
+                return false;
+
+            // 注意：忽略编辑器下的类型资源
+            var type = AssetDatabase.GetMainAssetTypeAtPath(assetPath);
+            if (type == typeof(LightingDataAsset))
+                return false;
+
+            var ext = Path.GetExtension(assetPath);
+            if (ext == "" || ext == ".cs" || ext == ".js" || ext == ".boo" || ext == ".meta" || ext == ".cginc")
+                return false;
 
             return true;
         }
-
-        private static bool IsScene(string asset)
-        {
-            return asset.EndsWith(".unity");
-        }
         
-        private string GetOriginPath(string path)
+        /// <summary>
+        /// 是否是场景资源
+        /// </summary>
+        /// <param name="assetPath">资源路径</param>
+        /// <returns></returns>
+        private static bool IsScene(string assetPath)
         {
-            if (string.IsNullOrEmpty(path)) return null;
-            var splits = path.Split('.');
-            if (splits.Length > 0)
-            {
-                return $"{splits[0]}_{abExtName}";
-            }
-            return null;
-        }
-
-        private string MakeBundleName(string path, string variant)
-        {
-            if (string.IsNullOrEmpty(path)) return null;
-            
-            var assetBundle = PathManager.GetRegularPath(path);
-            assetBundle = assetBundle.Replace(' ', '_');
-            assetBundle = assetBundle.Replace('.', '_');
-            
-            if (string.IsNullOrEmpty(variant))
-                return assetBundle;
-            
-            return assetBundle + "." + variant;
+            return assetPath.EndsWith(".unity");
         }
 
         /// <summary>
@@ -251,8 +380,7 @@ namespace UAsset.Editor
         /// </summary>
         private void Track(string asset, string bundle)
         {
-            HashSet<string> assets;
-            if (!_tracker.TryGetValue(asset, out assets))
+            if (!_tracker.TryGetValue(asset, out var assets))
             {
                 assets = new HashSet<string>();
                 _tracker.Add(asset, assets);
@@ -261,6 +389,10 @@ namespace UAsset.Editor
             assets.Add(bundle);
         }
 
+        /// <summary>
+        /// 获取bundle-assets映射表
+        /// </summary>
+        /// <returns></returns>
         private Dictionary<string, List<string>> GetBundles()
         {
             var bundles = new Dictionary<string, List<string>>();
@@ -280,162 +412,12 @@ namespace UAsset.Editor
             return bundles;
         }
 
-        private void Clear()
-        {
-            _bundlesRule.Clear();
-            _tracker.Clear();
-            _duplicated.Clear();
-            _conflicted.Clear();
-            _asset2Bundles.Clear();
-        }
-
-        private void Save()
-        {
-            UnityEditor.EditorUtility.ClearProgressBar();
-            UnityEditor.EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
-        }
-
-        private void OptimizeAssets()
-        {
-            int i = 0, max = _conflicted.Count;
-            foreach (var item in _conflicted)
-            {
-                if (UnityEditor.EditorUtility.DisplayCancelableProgressBar(string.Format("优化冲突{0}/{1}", i, max), item.Key,
-                    i / (float) max)) break;
-                var list = item.Value;
-                foreach (var asset in list)
-                    if (!IsScene(asset))
-                        _duplicated.Add(asset, item.Key + "_ext");
-                i++;
-            }
-
-            i = 0;
-            max = _duplicated.Count;
-            foreach (var item in _duplicated)
-            {
-                if (UnityEditor.EditorUtility.DisplayCancelableProgressBar(string.Format("优化冗余{0}/{1}", i, max), item.Key,
-                    i / (float) max)) break;
-                OptimizeAsset(item);
-                i++;
-            }
-        }
-
-        private void AnalysisAssets()
-        {
-            var getBundles = GetBundles();
-            int i = 0, max = getBundles.Count;
-            foreach (var item in getBundles)
-            {
-                var bundle = item.Key;
-                if (UnityEditor.EditorUtility.DisplayCancelableProgressBar(string.Format("分析依赖{0}/{1}", i, max), bundle,
-                    i / (float) max)) break;
-                var assetPaths = getBundles[bundle];
-                if (assetPaths.Exists(IsScene) && !assetPaths.TrueForAll(IsScene))
-                    _conflicted.Add(bundle, assetPaths.ToArray());
-                var dependencies = AssetDatabase.GetDependencies(assetPaths.ToArray(), true);
-                if (dependencies.Length > 0)
-                {
-                    foreach (var asset in dependencies)
-                    {
-                        if (ValidateAsset(asset) && !IsScene(asset))
-                            Track(asset, bundle);
-                    }
-                }
-                i++;
-            }
-
-            foreach (var assets in _tracker)
-            {
-                if (assets.Value.Count > 1) //如果资源被两个以上bundle包含
-                {
-                    _asset2Bundles.TryGetValue(assets.Key, out var bundleName);
-                    if (string.IsNullOrEmpty(bundleName))
-                    {
-                        // 为被多个bundle依赖的asset生成bundle名，并存储
-                        _duplicated.Add(assets.Key, HashSetToString(assets.Value));
-                    }
-                }
-            }
-        }
- 
         /// <summary>
-        /// 拼接所有bundle名计算出hash值
+        /// 记录bundle对应的规则
         /// </summary>
-        /// <param name="hashset">bundle名容器</param>
-        private string HashSetToString(HashSet<string> hashset)
-        {
-            var s = new StringBuilder();
-            foreach (var val in hashset)
-            {
-                s.Append(val);
-                s.Append("/");
-            }
-            using (var md5 = MD5.Create())
-            {
-                var hash = md5.ComputeHash(Encoding.Default.GetBytes(s.ToString()));
-                return "Shared/" + new Guid(hash);
-            }
-        }
-
-        private void MakeBundleList()
-        {
-            var getBundles = GetBundles();
-            ruleBundles = new RuleBundle[getBundles.Count];
-            var i = 0;
-            foreach (var item in getBundles)
-            {
-                ruleBundles[i] = new RuleBundle
-                {
-                    assets = item.Value.ToArray(),
-                    
-                };
-                ruleBundles[i].name = GetOriginPath(item.Key);
-                ruleBundles[i].variant = GetVariantNameFromPath(item.Key);
-                if (_bundlesRule.ContainsKey(item.Key))
-                {
-                    ruleBundles[i].packed = _bundlesRule[item.Key].packed;
-                    ruleBundles[i].packByRaw = _bundlesRule[item.Key].packRule == PackRule.PackRawFile;
-                    ruleBundles[i].tag = _bundlesRule[item.Key].tag;
-                }
-                i++;
-            }
-        }
-
-        private void MakeAssetList()
-        {
-            var list = new List<RuleAsset>();
-            foreach (var item in _asset2Bundles)
-            {
-                var asset = new RuleAsset
-                {
-                    assetName = item.Key,
-                    guid = AssetDatabase.AssetPathToGUID(item.Key)
-                };
-                
-                
-                list.Add(asset);
-                asset.bundle = GetOriginPath(item.Value);
-                asset.resourceVariant = GetVariantNameFromPath(item.Value);
-            }
-            list.Sort((a, b) => string.Compare(a.assetName, b.assetName, StringComparison.Ordinal));
-            ruleAssets = list.ToArray();
-        }
-
-        private void OptimizeAsset(KeyValuePair<string,string> assetKp)
-        {
-            var asset = assetKp.Key;
-            var depBundle = assetKp.Value;
-            if (asset.EndsWith(".shader"))
-                _asset2Bundles[asset] = MakeBundleName("shaders", null);
-            else
-            {
-                // 把依赖相同的资源打到同一个bundle
-                _asset2Bundles[asset] = MakeBundleName(depBundle, GetVariantName(asset));
-            }
-        }
-
-        private void UpdateBundleRule(string path, BuildRule rule)
+        /// <param name="path"></param>
+        /// <param name="rule"></param>
+        private void RecordBundleRule(string path, BuildRule rule)
         {
             if (_bundlesRule.ContainsKey(path))
             {
@@ -447,6 +429,10 @@ namespace UAsset.Editor
             }
         }
         
+        /// <summary>
+        /// 为规则路径下的资源创建bundle名
+        /// </summary>
+        /// <param name="rule">打包规则</param>
         private void ApplyRule(BuildRule rule)
         {
             var assets = rule.GetAssets();
@@ -458,7 +444,7 @@ namespace UAsset.Editor
                     foreach (var asset in assets)
                     {
                         _asset2Bundles[asset] = MakeBundleName(rule.assetBundleName, GetVariantName(asset));
-                        UpdateBundleRule(_asset2Bundles[asset], rule);
+                        RecordBundleRule(_asset2Bundles[asset], rule);
                     }
 
                     break;
@@ -476,7 +462,7 @@ namespace UAsset.Editor
                         }
                         
                         _asset2Bundles[asset] = MakeBundleName(assetPath, variant);
-                        UpdateBundleRule(_asset2Bundles[asset], rule);
+                        RecordBundleRule(_asset2Bundles[asset], rule);
                     }
 
                     break;
@@ -494,7 +480,7 @@ namespace UAsset.Editor
                         }
                         
                         _asset2Bundles[asset] = MakeBundleName(dir, variant);
-                        UpdateBundleRule(_asset2Bundles[asset], rule);
+                        RecordBundleRule(_asset2Bundles[asset], rule);
                     }
 
                     break;
@@ -507,23 +493,51 @@ namespace UAsset.Editor
                     {
                         var dir = PathManager.GetRegularPath(Path.GetDirectoryName(asset));
                         if (!string.IsNullOrEmpty(dir))
+                        {
                             if (!dir.Equals(rs))
                             {
                                 var pos = dir.IndexOf("/", startIndex, StringComparison.Ordinal);
                                 if (pos != -1) dir = dir.Substring(0, pos);
                             }
+                        }
 
                         _asset2Bundles[asset] = MakeBundleName(dir, GetVariantName(dir));
-                        UpdateBundleRule(_asset2Bundles[asset], rule);
+                        RecordBundleRule(_asset2Bundles[asset], rule);
                     }
 
                     break;
                 }
-                case PackRule.PackRawFile: // 不处理原生文件
+                case PackRule.PackRawFile:
+                    foreach (var asset in assets)
+                    {
+                        // 注意：原生文件只支持无依赖关系的资源
+                        string[] depends = AssetDatabase.GetDependencies(asset, true);
+                        if (depends.Length != 1)
+                            throw new Exception("RawFile cannot depend by other assets");
+                        
+                        _asset2Bundles[asset] = MakeBundleName(asset, null);
+                        RecordBundleRule(_asset2Bundles[asset], rule);
+                    }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+        
+        private void Clear()
+        {
+            _bundlesRule.Clear();
+            _tracker.Clear();
+            _shared.Clear();
+            _conflicted.Clear();
+            _asset2Bundles.Clear();
+        }
+
+        private void Save()
+        {
+            UnityEditor.EditorUtility.ClearProgressBar();
+            UnityEditor.EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
         }
         
         #region 处理变体
@@ -597,6 +611,61 @@ namespace UAsset.Editor
             if (string.IsNullOrEmpty(path)) return null;
             var splits = path.Split('.');
             return splits.Length > 1 ? splits[1] : null;
+        }
+        
+        #endregion
+        
+        #region 创建bundle名相关
+        
+        /// <summary>
+        /// 构建bundle名
+        /// </summary>
+        /// <param name="path">资源路径</param>
+        /// <param name="variant">变体名</param>
+        /// <returns></returns>
+        private string MakeBundleName(string path, string variant)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            
+            var assetBundle = PathManager.GetRegularPath(path);
+            assetBundle = assetBundle.Replace(' ', '_');
+            assetBundle = assetBundle.Replace('.', '_');
+            
+            if (string.IsNullOrEmpty(variant))
+                return assetBundle;
+            
+            return assetBundle + "." + variant;
+        }
+        
+        /// <summary>
+        /// 拼接所有bundle名计算出hash值
+        /// </summary>
+        /// <param name="hashset">bundle名容器</param>
+        private string MakeSharedBundleName(HashSet<string> hashset)
+        {
+            var s = new StringBuilder();
+            foreach (var val in hashset)
+            {
+                s.Append(val);
+                s.Append("/");
+            }
+            using (var md5 = MD5.Create())
+            {
+                var hash = md5.ComputeHash(Encoding.Default.GetBytes(s.ToString()));
+                return "Shared/" + new Guid(hash);
+            }
+        }
+        
+        /// <summary>
+        /// 获取bundle名
+        /// </summary>
+        /// <param name="path">路径</param>
+        /// <returns>bundle名</returns>
+        private string GetBundleName(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+            var splits = path.Split('.');
+            return splits.Length > 0 ? $"{splits[0]}_{abExtName}" : null;
         }
         
         #endregion

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -17,7 +18,7 @@ namespace UAsset.Editor
         
         private const float GAP = 5;
         
-        [MenuItem(MenuItems.kUAssetToolMenu + "自动分析面板")]
+        [MenuItem(MenuItems.kUAssetToolMenu + "自动分析面板", false, 55)]
         private static void ShowWindow()
         {
             GetWindow<AssetBundleAutoAnalysisPanel>("自动分析面板", true);
@@ -191,6 +192,18 @@ namespace UAsset.Editor
                     r.width = 150;
                     rule.packRule = (PackRule)EditorGUI.EnumPopup(r, rule.packRule);
                 }
+                
+                
+                // 文件过滤规则
+                {
+                    r.xMin = r.xMax + GAP;
+                    r.width = 100;
+                    
+                    var ruleNames = FileFilterRule.GetFilterRuleNames();
+                    var ruleIndex = Array.IndexOf(ruleNames, rule.filterRule);
+                    index = EditorGUI.Popup(r, ruleIndex, ruleNames);
+                    rule.filterRule = ruleNames[index];
+                }
 
                 // 手动指定bundle名
                 {
@@ -225,19 +238,8 @@ namespace UAsset.Editor
                     GUI.Label(r, "Tag");
                     
                     r.xMin = r.xMax + GAP;
-                    r.width = 80;
-                    rule.tag = GUI.TextField(r, rule.tag);
-                }
-
-                // 文件搜索匹配模式
-                {
-                    r.xMin = r.xMax + GAP;
-                    r.width = 50;
-                    GUI.Label(r, "Pattern");
-
-                    r.xMin = r.xMax + GAP;
                     r.xMax = rect.xMax;
-                    rule.searchPattern = GUI.TextField(r, rule.searchPattern);
+                    rule.tag = GUI.TextField(r, rule.tag);
                 }
             };
         }
@@ -323,8 +325,7 @@ namespace UAsset.Editor
             data.searchPath = path;
             return true;
         }
-
-        [MenuItem(MenuItems.kUAssetToolMenu + "Auto Analysis", priority = 10)]
+        
         public static void AutoAnalysis()
         {
             InitConfig();

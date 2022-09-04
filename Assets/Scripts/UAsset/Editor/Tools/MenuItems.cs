@@ -59,12 +59,6 @@ namespace UAsset.Editor
         
         #endregion
 
-        [MenuItem(kUAssetToolMenu + "Copy Build to StreamingAssets", false, 50)]
-        public static void CopyBuildToStreamingAssets()
-        {
-            BuildScript.CopyToStreamingAssets(PackageResourceType.Full);
-        }
-
         [MenuItem(kUAssetToolMenu + "Clear Build", false, 800)]
         public static void ClearBuild()
         {
@@ -87,6 +81,12 @@ namespace UAsset.Editor
         public static void ClearDownload()
         {
             Versions.ClearDownload();
+        }
+        
+        [MenuItem(kUAssetToolMenu + "Copy Build to StreamingAssets", false, 800)]
+        public static void CopyBuildToStreamingAssets()
+        {
+            BuildScript.CopyToStreamingAssets(PackageResourceType.Full);
         }
         
         [MenuItem(kUAssetToolMenu + "Select UAsset Settings", false, 850)]
