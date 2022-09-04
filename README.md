@@ -7,5 +7,5 @@ Unity资源管理系统，资源加载底层主要使用xasset 2022的免费版�
 4. 运行时Debugger面板
 
 ## 友情链接
-[xasset](https://github.com/xasset/xasset):开箱即用的 Unity 资源分包、加密、热更框架。
-[YooAsset](https://github.com/fadedFantastic/YooAsset): YooAsset资源管理系统，支持SBP
+- [xasset](https://github.com/xasset/xasset):开箱即用的 Unity 资源分包、加密、热更框架
+- [YooAsset](https://github.com/fadedFantastic/YooAsset): YooAsset资源管理系统，支持SBP
