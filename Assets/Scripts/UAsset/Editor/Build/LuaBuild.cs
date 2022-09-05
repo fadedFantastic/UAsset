@@ -18,14 +18,14 @@ namespace UAsset.Editor
 
         private static bool IS_OPEN_LUAJIT = false;
         
-        public static void GenerateBuildLua(string path)
+        public static void GenerateBuildLua(string sourcePath, string outputPath)
         {
-            DeleteBuildLua(path);
-            Utility.CreateDirectory(path);
+            DeleteBuildLua(outputPath);
+            Utility.CreateDirectory(outputPath);
 
             StringBuilder strErr = new StringBuilder();
             bool hasErr = false;
-            CopyLuaBytesFilesJit(ref hasErr, Application.dataPath + "/../Lua/", path, IS_OPEN_LUAJIT,
+            CopyLuaBytesFilesJit(ref hasErr, sourcePath, outputPath, IS_OPEN_LUAJIT,
                 strErr);
 
             if (hasErr)
@@ -110,9 +110,9 @@ namespace UAsset.Editor
         {
             using (System.Diagnostics.Process proc = new System.Diagnostics.Process())
             {
-                proc.StartInfo.FileName = string.Format("{0}/luajit", _luajit);
+                proc.StartInfo.FileName = $"{_luajit}/luajit";
                 proc.StartInfo.WorkingDirectory = _luajit;
-                proc.StartInfo.Arguments = string.Format("-b {0} {1}", sourceDir, destPath);
+                proc.StartInfo.Arguments = $"-b {sourceDir} {destPath}";
                 proc.StartInfo.CreateNoWindow = true;
                 proc.StartInfo.UseShellExecute = false;
                 proc.StartInfo.RedirectStandardOutput = true;
@@ -131,7 +131,7 @@ namespace UAsset.Editor
                 {
                     if (null != strErr)
                     {
-                        strErr.Append(errorSb.ToString() + "\n");
+                        strErr.Append(errorSb + "\n");
                     }
 
                     Debug.LogError(errorSb.ToString());

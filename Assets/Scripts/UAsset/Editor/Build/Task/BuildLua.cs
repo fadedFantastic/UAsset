@@ -1,14 +1,17 @@
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 namespace UAsset.Editor
 {
     public class BuildLua : BuildTaskJob
     {
-        public readonly List<ManifestBundle> bundles = new List<ManifestBundle>();
-        public const string OUTPUT_PATH = "Library/LuaCache/";
-        public const string ROOT_PATH = "Assets/Lua/";
-        public const string LUA_EXTENSION = ".lua";
+        private const string OUTPUT_PATH = "Library/LuaCache/";
+        private const string ROOT_PATH = "Assets/Lua/";
+        private const string LUA_EXTENSION = ".bytes";
+        
+        public readonly string luaSourcePath = Application.dataPath + "/../Lua/";
+        private readonly List<ManifestBundle> bundles = new List<ManifestBundle>();
         
         public BuildLua(BuildTask task) : base(task)
         {
@@ -16,11 +19,13 @@ namespace UAsset.Editor
 
         protected override void DoTask()
         {
+            if (!Directory.Exists(luaSourcePath)) return;
+            
             //生成 lua
-            LuaBuild.GenerateBuildLua(OUTPUT_PATH);
+            LuaBuild.GenerateBuildLua(luaSourcePath, OUTPUT_PATH);
             
             var bundleStartId = _task.bundles.Count;
-            int filePathLength = OUTPUT_PATH.Length;
+            var filePathLength = OUTPUT_PATH.Length;
             var files = Directory.GetFiles(OUTPUT_PATH, "*", SearchOption.AllDirectories);
             for (var index = 0; index < files.Length; ++index)
             {

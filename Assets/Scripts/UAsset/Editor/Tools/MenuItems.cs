@@ -96,5 +96,12 @@ namespace UAsset.Editor
             EditorGUIUtility.PingObject(settings);
             Selection.activeObject = settings;
         }
+        
+        // TODO: 临时的，写个面板
+        [MenuItem(kUAssetToolMenu + "Build AssetBundle")]
+        public static void BuildAssetBundle()
+        {
+            BuildScript.BuildBundles();
+        }
     }
 }
