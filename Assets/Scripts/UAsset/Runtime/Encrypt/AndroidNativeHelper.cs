@@ -1,16 +1,17 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 namespace UAsset
 {
-    public class AndroidNativeHelper
+    public static class AndroidNativeHelper
     {
-        public const string libName = "nativehelper";
-
 #if UNITY_ANDROID
-
+        private const string libName = "nativehelper";
+        
         [DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern void NativeInit();
+        private static extern void NativeInit();
 
         [DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr Open(string fileName);
@@ -29,34 +30,56 @@ namespace UAsset
         public static extern long GetLength(IntPtr asset);
         
         [DllImport(libName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int ReadAllBytes(string fileName, ref IntPtr result);
+        private static extern int ReadAllBytes(string fileName, IntPtr result);
         
         
-        public static void ReadAllBytes(string fileName, ref byte[] buffer)
+        private static readonly string SplitFlag = "!/assets/";
+        private static readonly int SplitFlagLength = SplitFlag.Length;
+        
+        static AndroidNativeHelper()
         {
+            NativeInit();
+        }
+        
+        public static void ReadAllBytes(string filePath, ref byte[] buffer)
+        {
+            filePath = GetAndroidFilePath(filePath);
             IntPtr ptr = Marshal.AllocHGlobal(buffer.Length);
             try
             {
-                var size = ReadAllBytes(fileName, ref ptr);
+                var size = ReadAllBytes(filePath, ptr);
                 if (size > 0)
                 {
                     if (ptr == IntPtr.Zero)
                     {
                         throw new Exception("Read Failed");
                     }
-
+                    
+                    Debug.Log($"ReadAllBytes size: {size}");
                     Marshal.Copy(ptr, buffer, 0, size);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Debug.LogError(e);
                 throw;
             }
             finally
             {
                 Marshal.FreeHGlobal(ptr);
             }
+        }
+        
+        public static string GetAndroidFilePath(string filePath)
+        {
+            var position = filePath.LastIndexOf(SplitFlag, StringComparison.Ordinal);
+            if (position < 0)
+            {
+                throw new Exception("Can not find split flag in full path.");
+            }
+            
+            filePath = filePath.Substring(position + SplitFlagLength);
+            return filePath;
         }
         
 #endif

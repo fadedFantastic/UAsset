@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 namespace UAsset
 {
@@ -10,8 +11,6 @@ namespace UAsset
     /// </summary>
     public class AndroidFileStream : Stream
     {
-        private static readonly string SplitFlag = "!/assets/";
-        private static readonly int SplitFlagLength = SplitFlag.Length;
         private readonly IntPtr m_FileStreamRawObject;
 
         public override bool CanRead => true;
@@ -20,11 +19,6 @@ namespace UAsset
         public override long Length => GetLength();
         public override long Position { get; set; }
         
-        static AndroidFileStream()
-        {
-            AndroidNativeHelper.NativeInit();
-        }
-
         /// <summary>
         /// 初始化安卓文件系统流的新实例。
         /// </summary>
@@ -35,14 +29,8 @@ namespace UAsset
             {
                 throw new Exception("Full path is invalid.");
             }
-
-            int position = fullPath.LastIndexOf(SplitFlag, StringComparison.Ordinal);
-            if (position < 0)
-            {
-                throw new Exception("Can not find split flag in full path.");
-            }
-
-            string fileName = fullPath.Substring(position + SplitFlagLength);
+            
+            var fileName = AndroidNativeHelper.GetAndroidFilePath(fullPath);
             m_FileStreamRawObject = InternalOpen(fileName);
             
             if (m_FileStreamRawObject == null)
@@ -71,7 +59,7 @@ namespace UAsset
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Debug.LogError(e);
                 throw;
             }
             finally
