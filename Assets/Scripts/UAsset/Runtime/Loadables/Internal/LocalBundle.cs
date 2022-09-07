@@ -15,6 +15,7 @@ namespace UAsset
         {
             if (isDone) return;
 
+            // 这里直接访问assetBundle属性，Unity内部会自动异步转成同步加载，直到完成
             OnLoaded(_request.assetBundle);
             _request = null;
         }

@@ -46,13 +46,14 @@ namespace UAsset
                 return;
             }
 
-            if (_asset.asset == null)
+            var goAsset = _asset.Get<GameObject>();
+            if (goAsset == null)
             {
                 Finish("asset == null");
                 return;
             }
 
-            result = Object.Instantiate(_asset.asset as GameObject);
+            result = Object.Instantiate(goAsset);
             Finish();
         }
 

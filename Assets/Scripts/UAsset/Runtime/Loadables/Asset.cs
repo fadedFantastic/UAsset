@@ -13,9 +13,9 @@ namespace UAsset
 
         public static Func<string, Type, Asset> Creator { get; set; } = BundledAsset.Create;
 
-        public Object asset { get; protected set; }
+        protected Object asset { get; set; }
 
-        public Object[] subAssets { get; protected set; }
+        protected Object[] subAssets { get; set; }
 
         protected Type type { get; set; }
 
@@ -45,9 +45,31 @@ namespace UAsset
             Finish(asset == null ? "asset == null" : null);
         }
 
+        /// <summary>
+        /// 获取资源对象
+        /// </summary>
+        /// <typeparam name="T">资源对象类型</typeparam>
+        /// <returns></returns>
         public T Get<T>() where T : Object
         {
             return asset as T;
+        }
+        
+        /// <summary>
+        /// 获取子资源对象
+        /// </summary>
+        /// <param name="assetName">子资源对象名称</param>
+        /// <typeparam name="TObject">子资源对象类型</typeparam>
+        public TObject GetSubAssetObject<TObject>(string assetName) where TObject : UnityEngine.Object
+        {
+            foreach (var assetObject in subAssets)
+            {
+                if (assetObject.name == assetName)
+                    return assetObject as TObject;
+            }
+
+            Logger.W($"Not found sub asset object : {assetName}");
+            return null;
         }
 
         protected override void OnComplete()

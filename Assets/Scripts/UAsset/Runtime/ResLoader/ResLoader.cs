@@ -147,12 +147,12 @@ namespace UAsset
         {
             if (m_AssetCache.ContainsKey(assetName))
             {
-                return m_AssetCache[assetName].asset as T;
+                return m_AssetCache[assetName].Get<T>();
             }
 
             var asset = Asset.Load(assetName, typeof(T));
             m_AssetCache.Add(assetName, asset);
-            return asset.asset as T;
+            return asset.Get<T>();
         }
 
         /// <summary>

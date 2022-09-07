@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Text;
+using UAsset;
 using UnityEngine;
 
 public class GameStart : MonoBehaviour
@@ -9,6 +11,12 @@ public class GameStart : MonoBehaviour
     private void Awake()
     {
         s_Instance = this;
+        StartCoroutine(Init());
+    }
+
+    private IEnumerator Init()
+    {
+        yield return Versions.InitializeAsync();
     }
 
     public static void StartCoroutineWrap(IEnumerator co)

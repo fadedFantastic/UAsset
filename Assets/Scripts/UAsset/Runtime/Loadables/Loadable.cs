@@ -76,13 +76,13 @@ namespace UAsset
 
         private void Complete()
         {
+            OnComplete();
+            
             if (status == LoadableStatus.FailedToLoad)
             {
                 Logger.E("Unable to load {0} {1} with error: {2}", GetType().Name, pathOrURL, error);
                 Release();
             }
-
-            OnComplete();
         }
 
         protected virtual void OnUpdate()
