@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -8,20 +9,44 @@ namespace UAsset
 {
     public class Loadable
     {
+        private static readonly Dictionary<string, int> _loads = new Dictionary<string, int>();
+        private static readonly Dictionary<string, int> _unloads = new Dictionary<string, int>();
+
         public static readonly List<Loadable> Loading = new List<Loadable>();
         public static readonly List<Loadable> Unused = new List<Loadable>();
 
         private readonly Reference _reference = new Reference();
+
+        public int loadTimes => GetTimes(pathOrURL, _loads);
+        public int unloadTimes => GetTimes(pathOrURL, _unloads);
+        public int referenceCount => _reference.count;
+        
         public LoadableStatus status { get; protected set; } = LoadableStatus.Wait;
         public string pathOrURL { get; protected set; }
         public string error { get; internal set; }
-        
-        public delegate void ResLoadCompleteCallBack(bool success, string assetName, object asset);
 
         public bool isDone => status == LoadableStatus.SuccessToLoad || status == LoadableStatus.Unloaded ||
                               status == LoadableStatus.FailedToLoad;
 
         public float progress { get; protected set; }
+
+        private static int GetTimes(string path, IReadOnlyDictionary<string, int> times)
+        {
+            return times.TryGetValue(path, out var value) ? value : 0;
+        }
+
+        [Conditional("DEBUG")]
+        private static void AddTimes(Loadable obj, IDictionary<string, int> dict)
+        {
+            if (!dict.TryGetValue(obj.pathOrURL, out var times))
+            {
+                dict[obj.pathOrURL] = 1;
+            }
+            else
+            {
+                dict[obj.pathOrURL] = times + 1;
+            }
+        }
 
         protected void Finish(string errorCode = null)
         {
@@ -119,7 +144,7 @@ namespace UAsset
             Loading.Add(this);
             
             if (status != LoadableStatus.Wait) return;
-            
+            AddTimes(this, _loads);
             Logger.I("Load {0} {1}.", GetType().Name, pathOrURL);
             status = LoadableStatus.Loading;
             progress = 0;
@@ -129,6 +154,7 @@ namespace UAsset
         private void Unload()
         {
             if (status == LoadableStatus.Unloaded) return;
+            AddTimes(this, _unloads);
             Logger.I("Unload {0} {1}.", GetType().Name, pathOrURL, error);
             OnUnload();
             status = LoadableStatus.Unloaded;
