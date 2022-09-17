@@ -34,7 +34,7 @@ namespace UAsset.Editor
             outputPath = Settings.PlatformBuildPath;
 
             jobs.Add(new VerifyBuild(this));
-            jobs.Add(new BuildBundles(this, BuildAssetBundleOptions.ChunkBasedCompression));
+            jobs.Add(new BuildBundles(this));
             jobs.Add(new BuildLua(this));
             jobs.Add(new EncryptFile(this));
             jobs.Add(new CreateManifest(this));

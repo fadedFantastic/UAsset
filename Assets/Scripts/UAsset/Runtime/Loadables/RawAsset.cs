@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Mime;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -14,7 +15,7 @@ namespace UAsset
         private UnityWebRequest _request;
         protected byte[] _binaryBytes;
 
-        public delegate void LoadRawAssetComplete(string binaryAssetName, byte[] binaryBytes);
+        public delegate void LoadRawAssetComplete(RawAsset asset);
         public LoadRawAssetComplete completed;
         public byte[] binaryBytes => _binaryBytes;
         public static Func<string, RawAsset> Creator { get; set; } = path => new RawAsset { pathOrURL = path };
@@ -89,7 +90,7 @@ namespace UAsset
             }
             
             var saved = completed;
-            completed?.Invoke(pathOrURL, _binaryBytes);
+            completed?.Invoke(this);
             completed -= saved;
         }
 
@@ -128,9 +129,9 @@ namespace UAsset
             return LoadInternal(filename, false, completed);
         }
 
-        public static RawAsset Load(string filename, LoadRawAssetComplete completed = null)
+        public static RawAsset Load(string filename)
         {
-            return LoadInternal(filename, true, completed);
+            return LoadInternal(filename, true);
         }
 
         private static RawAsset LoadInternal(string filename, bool mustCompleteOnNextFrame = false, 
@@ -178,7 +179,18 @@ namespace UAsset
             }
             Finish(errorCode);
         }
+
+        public string GetFileText()
+        {
+            if (_binaryBytes == null || _binaryBytes.Length == 0)
+            {
+                return string.Empty;
+            }
+            
+            return Encoding.Default.GetString(_binaryBytes); 
+        }
         
+
         public static string GetBinaryAssetPath(string filename)
         {
             if (Versions.SimulationMode)

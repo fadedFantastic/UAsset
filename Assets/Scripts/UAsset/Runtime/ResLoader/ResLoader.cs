@@ -19,28 +19,18 @@ namespace UAsset
             }
         }
         
-        private static Stack<ResLoader> m_Loaders = new Stack<ResLoader>();
+        private static Stack<ResLoader> _loaders = new Stack<ResLoader>();
         
-        private Dictionary<string, Asset> m_AssetCache = new Dictionary<string, Asset>();
-        private Dictionary<string, Res> m_WaitingRes = new Dictionary<string, Res>();
-        private Dictionary<string, List<Loadable.ResLoadCompleteCallBack>> m_CompleteCallbacks =
-            new Dictionary<string, List<Loadable.ResLoadCompleteCallBack>>();
+        private Dictionary<string, Asset> _assetCache = new Dictionary<string, Asset>();
+        private Dictionary<string, Res> _waitingRes = new Dictionary<string, Res>();
+        private Dictionary<string, List<Action<Asset>>> _completeCallbacks =
+            new Dictionary<string, List<Action<Asset>>>();
 
-        private Action m_OnAllFinish;
+        private Action onAllFinish;
 
         public static ResLoader Alloc()
         {
-            return m_Loaders.Count > 0 ? m_Loaders.Pop() : new ResLoader();
-        }
-
-        /// <summary>
-        /// loader添加一个等待加载的资源
-        /// </summary>
-        /// <param name="name">资源名</param>
-        /// <param name="onComplete">完成后回调方法</param>
-        public ResLoader Add2Load(string name, Loadable.ResLoadCompleteCallBack onComplete = null)
-        {
-            return Add2Load(name, typeof(UnityEngine.Object), onComplete);
+            return _loaders.Count > 0 ? _loaders.Pop() : new ResLoader();
         }
 
         /// <summary>
@@ -49,45 +39,35 @@ namespace UAsset
         /// <param name="name">资源名</param>
         /// <param name="type">资源类型</param>
         /// <param name="onComplete">完成后回调方法</param>
-        public ResLoader Add2Load(string name, Type type, Loadable.ResLoadCompleteCallBack onComplete = null)
+        public ResLoader Add2Load(string name, Type type, Action<Asset> onComplete = null)
         {
             return Add2Waiting(name, type, false, onComplete);
         }
-        
+
         /// <summary>
         /// loader添加一个等待加载的资源(同步模式)
         /// </summary>
         /// <param name="name">资源名</param>
-        /// <param name="onComplete">完成后回调方法</param>
-        public ResLoader Add2LoadRapid(string name, Loadable.ResLoadCompleteCallBack onComplete = null)
-        {
-            return Add2LoadRapid(name, null, onComplete);
-        }
-
-        /// <summary>
-        /// loader添加一个等待加载的资源
-        /// </summary>
-        /// <param name="name">资源名</param>
         /// <param name="type">资源类型</param>
         /// <param name="onComplete">完成后回调方法</param>
-        public ResLoader Add2LoadRapid(string name, Type type, Loadable.ResLoadCompleteCallBack onComplete = null)
+        public ResLoader Add2LoadRapid(string name, Type type, Action<Asset> onComplete = null)
         {
             return Add2Waiting(name, type, true, onComplete);
         }
 
-        private ResLoader Add2Waiting(string name, Type type, bool isRapid, Loadable.ResLoadCompleteCallBack listener = null)
+        private ResLoader Add2Waiting(string name, Type type, bool isRapid, Action<Asset> listener = null)
         {
-            if (!m_WaitingRes.ContainsKey(name))
+            if (!_waitingRes.ContainsKey(name))
             {
                 var res = new Res(name, type, isRapid);
-                m_WaitingRes[name] = res;
+                _waitingRes[name] = res;
                 if (listener != null)
                 {
-                    if (!m_CompleteCallbacks.ContainsKey(name))
+                    if (!_completeCallbacks.ContainsKey(name))
                     {
-                        m_CompleteCallbacks[name] = new List<Loadable.ResLoadCompleteCallBack>();
+                        _completeCallbacks[name] = new List<Action<Asset>>();
                     }
-                    m_CompleteCallbacks[name].Add(listener);   
+                    _completeCallbacks[name].Add(listener);   
                 }
             }
             return this;
@@ -99,59 +79,61 @@ namespace UAsset
         /// <param name="onFinish">全部资源加载结束回调</param>
         public void Load(Action onFinish = null)
         {
-            m_OnAllFinish = onFinish;
+            onAllFinish = onFinish;
 
-            foreach (var res in m_WaitingRes)
+            foreach (var res in _waitingRes)
             {
                 var resInfo = res.Value;
                 var path = resInfo.path;
                 Asset asset;
                 if (resInfo.rapid)
                 {
-                    asset = Asset.Load(path, resInfo.type, OnLoadOneComplete); 
+                    asset = Asset.Load(path, resInfo.type);
+                    OnLoadOneComplete(asset);
                 }
                 else
                 {
                     asset = Asset.LoadAsync(path, resInfo.type, OnLoadOneComplete);
                 }
-                m_AssetCache[path] = asset;
+                _assetCache[path] = asset;
             }
-            m_WaitingRes.Clear();
+            _waitingRes.Clear();
         }
 
-        private void OnLoadOneComplete(bool success, string assetName, object asset)
+        private void OnLoadOneComplete(Asset asset)
         {
-            if (m_CompleteCallbacks.ContainsKey(assetName))
+            var assetName = asset.pathOrURL;
+            if (_completeCallbacks.ContainsKey(assetName))
             {
-                foreach (var listener in m_CompleteCallbacks[assetName])
+                foreach (var listener in _completeCallbacks[assetName])
                 {
-                    listener?.Invoke(success, assetName, asset);
+                    listener?.Invoke(asset);
                 }
-                m_CompleteCallbacks.Remove(assetName);
+                _completeCallbacks.Remove(assetName);
             }
 
-            bool allDone = true;
-            foreach (var cache in m_AssetCache)
+            var allDone = true;
+            foreach (var cache in _assetCache)
             {
                 allDone = allDone && cache.Value.isDone;
             }
 
             if (allDone)
             {
-                m_OnAllFinish?.Invoke();
-                m_OnAllFinish = null;
+                onAllFinish?.Invoke();
+                onAllFinish = null;
             }
         }
         
         public T LoadAssetImmediate<T>(string assetName) where T : UnityEngine.Object
         {
-            if (m_AssetCache.ContainsKey(assetName))
+            if (_assetCache.ContainsKey(assetName))
             {
-                return m_AssetCache[assetName].Get<T>();
+                return _assetCache[assetName].Get<T>();
             }
 
             var asset = Asset.Load(assetName, typeof(T));
-            m_AssetCache.Add(assetName, asset);
+            _assetCache.Add(assetName, asset);
             return asset.Get<T>();
         }
 
@@ -160,57 +142,48 @@ namespace UAsset
         /// </summary>
         public void ReleaseRes(string name)
         {
-            if (m_AssetCache.TryGetValue(name, out var asset))
+            if (_assetCache.TryGetValue(name, out var asset))
             {
                 asset.Release();
-                m_AssetCache.Remove(name);
+                _assetCache.Remove(name);
             }
-            else if (m_WaitingRes.ContainsKey(name))
+            else if (_waitingRes.ContainsKey(name))
             {
-                m_WaitingRes.Remove(name);
+                _waitingRes.Remove(name);
             }
         }
 
         /// <summary>
         /// loader取消对所有资源的引用
         /// </summary>
-        public void ReleaseAllRes()
+        private void ReleaseAllRes()
         {
-            foreach (var asset in m_AssetCache)
+            foreach (var asset in _assetCache)
             {
                 asset.Value.Release();
             }
-            m_AssetCache.Clear();
+            _assetCache.Clear();
         }
         
-        public void Dispose()
+        private void Dispose()
         {
             ReleaseAllRes();
-            m_WaitingRes.Clear();
-            m_CompleteCallbacks.Clear();
-            m_OnAllFinish = null;
+            _waitingRes.Clear();
+            _completeCallbacks.Clear();
+            onAllFinish = null;
         }
 
         public void Recycle2Cache()
         {
-            Recycle(this);
+            Dispose();
+            _loaders.Push(this);
         }
 
-        /// <summary>
-        /// 让一个loader返回池中
-        /// </summary>
-        /// <param name="resLoader">要回池的loader</param>
-        public static void Recycle(ResLoader resLoader)
-        {
-            resLoader.Dispose();
-            m_Loaders.Push(resLoader);
-        }
-        
         public static void Clear()
         {
-            while (m_Loaders.Count > 0)
+            while (_loaders.Count > 0)
             {
-                m_Loaders.Pop().Dispose();
+                _loaders.Pop().Dispose();
             }
         }
     }

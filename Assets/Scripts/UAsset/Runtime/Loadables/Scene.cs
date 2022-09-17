@@ -20,17 +20,14 @@ namespace UAsset
         public Action<Scene> completed;
         public Action<float> onUpdate;
         public Action<AsyncOperation> onload;
-        public Action unloaded;
-        
+
         protected string sceneName;
         protected bool mustCompleteOnNextFrame { get; set; }
         public static Func<string, bool, Scene> Creator { get; set; } = Create;
 
         public AsyncOperation load { get; private set; }
-        public AsyncOperation unload { get; private set; }
 
         public static Scene main { get; set; }
-        private Scene parent { get; set; }
         protected LoadSceneMode loadSceneMode { get; set; }
 
         public bool MoveNext()
@@ -53,6 +50,15 @@ namespace UAsset
             onload = null;
             Progressing.Add(operation);
         }
+        
+        private static void UnloadSceneAsync(AsyncOperation operation)
+        {
+            if (operation == null)
+            {
+                return;
+            }
+            Progressing.Add(operation);
+        }
 
         private static Scene CreateInstance(string path, bool additive)
         {
@@ -65,7 +71,10 @@ namespace UAsset
 
         public static Scene LoadAsync(string assetPath, Action<Scene> completed = null, bool additive = false)
         {
-            if (string.IsNullOrEmpty(assetPath)) throw new ArgumentNullException(nameof(assetPath));
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                throw new ArgumentNullException(nameof(assetPath));
+            }
 
             var scene = CreateInstance(assetPath, additive);
             scene.Load();
@@ -129,70 +138,48 @@ namespace UAsset
 
         protected void PrepareToLoad()
         {
-            // 暂时由上层控制卸载
             sceneName = Path.GetFileNameWithoutExtension(pathOrURL);
-            // if (loadSceneMode == LoadSceneMode.Single)
-            // {
-            //      if (main != null)
-            //      {
-            //          main.Release();
-            //          main = null;
-            //      }
-            //      
-            //      main = this;
-            // }
-            // else
-            // {
-            //     if (main == null) return;
-            //
-            //     main.additives.Add(this);
-            //     parent = main;
-            // }
+            if (loadSceneMode == LoadSceneMode.Single)
+            {
+                 if (main != null)
+                 {
+                     main.Release();
+                     main = null;
+                 }
+                 
+                 main = this;
+            }
+            else
+            {
+                if (main == null) return;
+            
+                main.additives.Add(this);
+            }
         }
 
         protected override void OnUnused()
         {
             completed = null;
-        }
-
-        private void UnloadSceneAsync(string scene)
-        {
-            var getScene = SceneManager.GetSceneByName(scene);
-            if (!getScene.IsValid())
-            {
-                return;
-            }
-            
-            var unloadSceneAsync = SceneManager.UnloadSceneAsync(scene);
-            if (unloadSceneAsync == null) return;
-            
-            unload = unloadSceneAsync;
-            Progressing.Add(unloadSceneAsync);
+            Unused.Add(this);
         }
 
         /// <summary>
         /// 处理异步卸载场景完成后的回调
         /// </summary>
-        protected override void OnUpdateUnload()
+        protected static void UnloadSceneAsync(string scene)
         {
-            if (status == LoadableStatus.Unloaded) return;
-            
-            if (unload == null)
+            var getScene = SceneManager.GetSceneByName(scene);
+            if (! getScene.IsValid())
             {
-                status = LoadableStatus.Unloading;
-                UnloadSceneAsync(sceneName);
                 return;
             }
-            
-            if (unload != null && unload.isDone)
+            var unloadSceneAsync = SceneManager.UnloadSceneAsync(scene);
+            if (unloadSceneAsync == null)
             {
-                status = LoadableStatus.Unloaded;
-                Logger.I("Unload {0} {1}.", GetType().Name, pathOrURL, error);
-                unload = null;
-                unloaded?.Invoke();
-                unloaded = null;
-                onSceneUnloaded?.Invoke(this);
+                return;
             }
+
+            UnloadSceneAsync(unloadSceneAsync);
         }
 
         public static bool IsLoadingOrUnloading()
@@ -200,7 +187,10 @@ namespace UAsset
             for (var i = 0; i < Progressing.Count; i++)
             {
                 var item = Progressing[i];
-                if (item != null && !item.isDone) return true;
+                if (item != null && !item.isDone)
+                {
+                    return true;
+                }
 
                 Progressing.RemoveAt(i);
                 i--;
@@ -211,25 +201,24 @@ namespace UAsset
 
         protected override void OnUnload()
         {
-            // if (loadSceneMode == LoadSceneMode.Additive)
-            // {
-            //     main?.additives.Remove(this);
-            //     if (parent != null && string.IsNullOrEmpty(error)) UnloadSceneAsync(sceneName);
-            //     
-            //     parent = null;
-            // }
-            // else
-            // {
-            //     foreach (var item in additives)
-            //     {
-            //         item.Release();
-            //         item.parent = null;
-            //     }
-            //
-            //     additives.Clear();
-            // }
-            
-            //onSceneUnloaded?.Invoke(this);
+            if (loadSceneMode == LoadSceneMode.Additive)
+            {
+                main?.additives.Remove(this);
+                if (string.IsNullOrEmpty(error))
+                {
+                    UnloadSceneAsync(sceneName);
+                }
+            }
+            else
+            {
+                foreach (var item in additives)
+                {
+                    item.Release();
+                }
+                additives.Clear();
+            }
+
+            onSceneUnloaded?.Invoke(this);
         }
 
         protected override void OnComplete()

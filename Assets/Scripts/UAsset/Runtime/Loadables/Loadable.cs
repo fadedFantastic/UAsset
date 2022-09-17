@@ -14,6 +14,8 @@ namespace UAsset
 
         public static readonly List<Loadable> Loading = new List<Loadable>();
         public static readonly List<Loadable> Unused = new List<Loadable>();
+        
+        protected static bool _updateUnloadUnusedAssets;
 
         private readonly Reference _reference = new Reference();
 
@@ -76,8 +78,7 @@ namespace UAsset
             {
                 var item = Unused[index];
                 if (Updater.busy) break;
-
-                item.UpdateUnload();
+                
                 if (!item.isDone) continue;
 
                 Unused.RemoveAt(index);
@@ -87,16 +88,22 @@ namespace UAsset
 
                 item.Unload();
             }
+            
+            if (Unused.Count > 0)
+            {
+                return;
+            }
+
+            if (_updateUnloadUnusedAssets)
+            {
+                Resources.UnloadUnusedAssets();
+                _updateUnloadUnusedAssets = false;
+            }
         }
 
         private void Update()
         {
             OnUpdate();
-        }
-
-        private void UpdateUnload()
-        {
-            OnUpdateUnload();
         }
 
         private void Complete()
@@ -112,11 +119,6 @@ namespace UAsset
 
         protected virtual void OnUpdate()
         {
-        }
-
-        protected virtual void OnUpdateUnload()
-        {
-            
         }
 
         protected virtual void OnLoad()

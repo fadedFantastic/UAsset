@@ -40,12 +40,12 @@ namespace UAsset
         /// <summary>
         ///     文件验证模式 (对于带hash的文件名，其实使用 size 校验就可以了)
         /// </summary>
-        public static VerifyMode VerifyMode { get; set; } = VerifyMode.Size;
+        private static VerifyMode VerifyMode { get; set; } = VerifyMode.Size;
 
         /// <summary>
         ///     游戏版本号
         /// </summary>
-        public static String GameVersion { get; private set; } = Application.version;
+        public static string GameVersion { get; private set; } = Application.version;
 
         /// <summary>
         ///     资源版本号
@@ -80,7 +80,7 @@ namespace UAsset
         /// <summary>
         ///     当前变体名
         /// </summary>
-        public static string CurrentVariant { get; set; }
+        public static string CurrentVariant { get; set; } = string.Empty;
 
         /// <summary>
         ///     当前语言

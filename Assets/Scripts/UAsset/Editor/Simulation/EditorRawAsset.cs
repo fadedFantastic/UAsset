@@ -31,7 +31,7 @@ namespace UAsset.Editor
             }
 
             var saved = completed;
-            completed?.Invoke(pathOrURL, _binaryBytes);
+            completed?.Invoke(this);
             completed -= saved;
         }
 

@@ -18,6 +18,8 @@ namespace UAsset
 
         public AssetBundle assetBundle { get; protected set; }
 
+        public ManifestBundle bundleInfo => info;
+
         protected AssetBundleCreateRequest LoadAssetBundleAsync(string url)
         {
             Logger.I("LoadAssetBundleAsync", info.nameWithAppendHash);

@@ -31,6 +31,6 @@ public class GameStart : MonoBehaviour
     // 热更完成后的进游戏的一些初始化
     public static void OnUpdateComplete()
     {
-        RawAsset.Load("Assets/Res/RawText/rawText1.txt");
+        Scene.LoadAsync("Assets/Res/Scene/GameScene.unity");
     }
 }

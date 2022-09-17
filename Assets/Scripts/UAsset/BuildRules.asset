@@ -16,23 +16,70 @@ MonoBehaviour:
   variantRules:
   - valid: 1
     searchPath: 
-    searchPattern: '*.prefab'
     tag: 
     packRule: 1
     assetBundleName: 
     packed: 1
+    filterRule: CollectAll
   variantDirNames:
   - cn
   - en
   - jp
   rules:
   - valid: 1
-    searchPath: Res
-    searchPattern: '*.prefab'
+    searchPath: Res/RawText
+    tag: 
+    packRule: 4
+    assetBundleName: 
+    packed: 1
+    filterRule: CollectAll
+  - valid: 1
+    searchPath: Res/Scene
     tag: 
     packRule: 1
     assetBundleName: 
     packed: 1
-  ruleAssets: []
-  ruleBundles: []
+    filterRule: CollectScene
+  - valid: 1
+    searchPath: Res/UIPanel
+    tag: 
+    packRule: 1
+    assetBundleName: 
+    packed: 1
+    filterRule: CollectPrefab
+  ruleAssets:
+  - assetName: Assets/Res/RawText/rawText1.txt
+    bundle: Assets/Res/RawText/rawText1_txt_ab
+    guid: b167a56eaa566a641975b8ddac3e7427
+    resourceVariant: 
+  - assetName: Assets/Res/Scene/GameScene.unity
+    bundle: Assets/Res/Scene/GameScene_unity_ab
+    guid: 148e5a9b6be1247448b63124fb3acd8e
+    resourceVariant: 
+  - assetName: Assets/Res/Scene/SubScene.unity
+    bundle: Assets/Res/Scene/SubScene_unity_ab
+    guid: 711c0b51472c8344099bbab3a178bd0b
+    resourceVariant: 
+  ruleBundles:
+  - name: Assets/Res/RawText/rawText1_txt_ab
+    packed: 1
+    assets:
+    - Assets/Res/RawText/rawText1.txt
+    variant: 
+    tag: 
+    packByRaw: 1
+  - name: Assets/Res/Scene/GameScene_unity_ab
+    packed: 1
+    assets:
+    - Assets/Res/Scene/GameScene.unity
+    variant: 
+    tag: 
+    packByRaw: 0
+  - name: Assets/Res/Scene/SubScene_unity_ab
+    packed: 1
+    assets:
+    - Assets/Res/Scene/SubScene.unity
+    variant: 
+    tag: 
+    packByRaw: 0
   abExtName: ab

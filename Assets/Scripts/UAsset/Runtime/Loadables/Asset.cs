@@ -9,7 +9,7 @@ namespace UAsset
     {
         public static readonly Dictionary<string, Asset> Cache = new Dictionary<string, Asset>();
 
-        public ResLoadCompleteCallBack completed;
+        public Action<Asset> completed;
 
         public static Func<string, Type, Asset> Creator { get; set; } = BundledAsset.Create;
 
@@ -78,7 +78,7 @@ namespace UAsset
 
             var saved = completed;
             var isSuccessLoaded = status == LoadableStatus.SuccessToLoad;
-            completed?.Invoke(isSuccessLoaded, pathOrURL, asset);
+            completed?.Invoke(this);
 
             completed -= saved;
         }
@@ -93,14 +93,14 @@ namespace UAsset
             Cache.Remove(pathOrURL);
         }
 
-        public static Asset LoadAsync(string path, Type type, ResLoadCompleteCallBack completed = null)
+        public static Asset LoadAsync(string path, Type type, Action<Asset> completed = null)
         {
             return LoadInternal(path, type, completed);
         }
 
-        public static Asset Load(string path, Type type, ResLoadCompleteCallBack completed = null)
+        public static Asset Load(string path, Type type)
         {
-            var asset = LoadInternal(path, type, completed);
+            var asset = LoadInternal(path, type);
             asset.LoadImmediate();
             return asset;
         }
@@ -125,7 +125,7 @@ namespace UAsset
         }
 
         private static Asset LoadInternal(string path, Type type,
-            ResLoadCompleteCallBack completed = null)
+            Action<Asset> completed = null)
         {
             // TODO: 现在业务层传过来的是短路径，暂时先由外面直接传全路径
             // PathManager.GetActualPath(ref path);

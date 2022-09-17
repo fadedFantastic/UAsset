@@ -12,9 +12,9 @@ namespace UAsset.Editor
         public readonly List<ManifestBundle> bundles = new List<ManifestBundle>();
         public readonly List<RuleBundle> rawBundles = new List<RuleBundle>();
 
-        public BuildBundles(BuildTask task, BuildAssetBundleOptions options) : base(task)
+        public BuildBundles(BuildTask task) : base(task)
         {
-            _options = options;
+            _options = BuildAssetBundleOptions.ChunkBasedCompression;
         }
 
         private ABuildPipeline BuildPipeline => customBuildPipeline != null
