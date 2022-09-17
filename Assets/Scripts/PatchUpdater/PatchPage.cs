@@ -67,13 +67,11 @@ public class PatchPage : MonoBehaviour
     {
         m_MsgBoxObj = transform.Find("ConfirmPanel").gameObject;
         m_Progress = transform.Find("Slider").GetComponent<Slider>();
-        m_ProgressTips = transform.Find("Text").GetComponent<Text>();
+        m_ProgressTips = transform.Find("ProgressTips").GetComponent<Text>();
         
-        // 暂时好像没有开多个的需要
         m_MsgBox = new MessageBox(m_MsgBoxObj);
     }
     
-    // TODO: 本地化处理
     public void ShowStateChangeTips(PatchStates state)
     {
         if (state == PatchStates.UpdateVersion)
@@ -87,8 +85,7 @@ public class PatchPage : MonoBehaviour
         else if (state == PatchStates.PatchDone)
             m_ProgressTips.text = "正在启动游戏";
     }
-
-    // TODO: 本地化处理
+    
     public void ShowMessageBox(PatchMessageBoxType type, Action<bool> onClick)
     {
         string content = string.Empty;
@@ -105,8 +102,7 @@ public class PatchPage : MonoBehaviour
 
         ShowMessageBox(content, onClick);
     }
-
-    // TODO: 本地化处理
+    
     public void ShowProgress(long downloaded, long totalSize, long speed)
     {
         m_ProgressTips.text = $"下载中...{FormatBytes(downloaded)}/{FormatBytes(totalSize)}  速度: {FormatBytes(speed)}/s";
