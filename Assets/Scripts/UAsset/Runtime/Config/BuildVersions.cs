@@ -31,14 +31,14 @@ namespace UAsset
         public bool encryptionEnabled;
 
         /// <summary>
-        ///     当前语言
+        ///     包体默认变体类型
         /// </summary>
-        public string language;
+        public string buildinVariant;
 
         /// <summary>
         ///     语言列表
         /// </summary>
-        public string[] languages;
+        public string[] variantTypes;
 
         /// <summary>
         ///     变体版本号

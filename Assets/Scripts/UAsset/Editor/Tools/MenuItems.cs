@@ -101,6 +101,7 @@ namespace UAsset.Editor
         [MenuItem(kUAssetToolMenu + "Build AssetBundle")]
         public static void BuildAssetBundle()
         {
+            AssetBundleAutoAnalysisPanel.AutoAnalysis();
             BuildScript.BuildBundles();
         }
     }

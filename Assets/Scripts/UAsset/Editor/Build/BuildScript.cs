@@ -9,7 +9,10 @@ namespace UAsset.Editor
 {
     public static class BuildScript
     {
-        public const string DEFAULT_BUILD_LANGUAGE = "chinese";
+        /// <summary>
+        ///     默认变体名，可自行配置
+        /// </summary>
+        private const string BUILDIN_VARIANT = "chinese";
         public static Action<BuildTask> postprocessBuildBundles { get; set; }
         public static Action<BuildTask> preprocessBuildBundles { get; set; }
 
@@ -26,20 +29,20 @@ namespace UAsset.Editor
         /// <param name="resVersion">资源版本号</param>
         /// <param name="abPath">构建路径</param>
         /// <param name="copyResType">资源包类型</param>
-        /// <param name="language">语言</param>
+        /// <param name="variant">变体名</param>
         public static void BuildBundles(int resVersion = -1, string abPath = null, 
-            PackageResourceType copyResType = PackageResourceType.Zero, string language = DEFAULT_BUILD_LANGUAGE)
+            PackageResourceType copyResType = PackageResourceType.Zero, string variant = BUILDIN_VARIANT)
         {
-            BuildBundles(new BuildTask(resVersion, abPath, copyResType, language));
+            BuildBundles(new BuildTask(resVersion, abPath, copyResType, variant));
         }
 
         /// <summary>
         /// 拷贝打包资源到StreamingAssets目录
         /// </summary>
         /// <param name="type">安装包资源类型</param>
-        /// <param name="language">安装包默认语言</param>
+        /// <param name="variant">安装包默认语言</param>
         public static void CopyToStreamingAssets(PackageResourceType type = PackageResourceType.Zero, 
-            string language = DEFAULT_BUILD_LANGUAGE)
+            string variant = BUILDIN_VARIANT)
         {
             var destinationDir = Settings.BuildPlayerDataPath;
             if (Directory.Exists(destinationDir))
@@ -57,7 +60,7 @@ namespace UAsset.Editor
                 for (var index = 0; index < bundles.Count; index++)
                 {
                     var bundle = bundles[index];
-                    if ((bundle.IsVariant && bundle.variant != language) || !bundle.copyToPackage || bundle.IsWithTag)
+                    if ((bundle.IsVariant && bundle.variant != variant) || !bundle.copyToPackage || bundle.IsWithTag)
                     {
                         bundles.RemoveAt(index);
                         --index;

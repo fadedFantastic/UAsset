@@ -61,10 +61,10 @@ namespace UAsset
             var localVersion = BuildVersions.Load(Downloader.GetDownloadDataPath(Versions.Filename));
             // 首次安装时，下载目录暂不存在本地版本文件
             var variantVersion = localVersion.variantVersion ?? severVersion.variantVersion;
-            var languageList = severVersion.languages;
-            for (var i = 0; i < languageList.Length; ++i)
+            var variantTypes = severVersion.variantTypes;
+            for (var i = 0; i < variantTypes.Length; ++i)
             {
-                if (languageList[i] == Versions.CurrentVariant)
+                if (variantTypes[i] == Versions.CurrentVariant)
                 {
                     variantVersion[i] = severVersion.internalResourceVersion;
                     break;

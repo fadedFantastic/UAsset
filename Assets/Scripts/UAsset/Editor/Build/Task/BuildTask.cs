@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -19,15 +18,15 @@ namespace UAsset.Editor
         public int buildVersion;
         public bool forceRebuild;
 
-        public string buildLanguage { get; }
+        public string buildVariant { get; }
         public BuildRules buildRules { get; }
         public PackageResourceType packageResourceType { get; }
 
-        public BuildTask(int version, string abPath, PackageResourceType copyResType, string language) : this("Manifest")
+        public BuildTask(int version, string abPath, PackageResourceType copyResType, string variant) : this("Manifest")
         {
             buildVersion = version;
             packageResourceType = copyResType;
-            buildLanguage = language;
+            buildVariant = variant;
             buildRules = GetBuildRules();
             
             Utility.BuildPath = abPath ?? Utility.BuildPath;
@@ -101,9 +100,9 @@ namespace UAsset.Editor
             var buildVersions = BuildVersions.Load(GetBuildPath(Versions.Filename));
             buildVersions.Set(name, file, info.Length, timestamp, hash, Application.version, buildVersion);
             buildVersions.encryptionEnabled = Settings.EncryptionEnabled;
-            buildVersions.language = buildLanguage;
-            buildVersions.languages = buildRules.variantDirNames;
-            buildVersions.variantVersion = Enumerable.Repeat(0, buildVersions.languages.Length).ToList();;
+            buildVersions.buildinVariant = buildVariant;
+            buildVersions.variantTypes = buildRules.variantDirNames;
+            buildVersions.variantVersion = Enumerable.Repeat(0, buildVersions.variantTypes.Length).ToList();;
             
             File.WriteAllText(GetBuildPath(Versions.Filename), JsonUtility.ToJson(buildVersions, true));
         }

@@ -85,12 +85,12 @@ namespace UAsset
         /// <summary>
         ///     当前语言
         /// </summary>
-        public static string Language { get; private set; }
+        public static string BuildinVariant { get; private set; }
 
         /// <summary>
         ///     语言列表
         /// </summary>
-        public static string[] Languages { get; private set; }
+        public static string[] VariantTypes { get; private set; }
 
         /// <summary>
         ///     获取清单的版本号
@@ -144,8 +144,8 @@ namespace UAsset
             StreamingAssets.AddRange(versions.streamingAssets);
             OfflineMode = versions.offlineMode;
             SimulationMode = false;
-            Language = versions.language;
-            Languages = versions.languages;
+            BuildinVariant = versions.buildinVariant;
+            VariantTypes = versions.variantTypes;
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace UAsset
             
             // 记录变体版本号
             VariantVersions.Clear();
-            var languages = versions.languages;
+            var languages = versions.variantTypes;
             for(var i = 0; i < languages.Length; ++i)
             {
                 VariantVersions.Add(languages[i], versions.variantVersion[i]);
