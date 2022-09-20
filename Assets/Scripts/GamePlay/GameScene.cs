@@ -29,6 +29,25 @@ namespace GamePlay
                     hint.text = loadable.GetFileText();
                 });
             }
+
+
+            // 同步加载贴图
+            {
+                var button = rootCanvas.transform.Find("load_sprite").GetComponent<Button>();
+                var image = rootCanvas.transform.Find("load_sprite/image").GetComponent<Image>();
+                Asset loadable = null;
+                button.onClick.AddListener(() =>
+                {
+                    loadable = Asset.Load("Assets/Res/UISprite/daggers_2.png", typeof(Sprite));
+                    image.sprite = loadable.Get<Sprite>();
+                });
+                
+                var unloadButton = rootCanvas.transform.Find("load_sprite/unload").GetComponent<Button>();
+                unloadButton.onClick.AddListener(() =>
+                {
+                    loadable?.Release();
+                });
+            }
         }
     }
 }
