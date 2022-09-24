@@ -30,8 +30,8 @@ namespace UAsset.Editor
                     break;
                 case ScriptPlayMode.Increment:
                     if (settings.requestCopy &&
-                        UnityEditor.EditorUtility.DisplayDialog("提示", "增量模式启动，是否复制资源到StreamingAssets", "复制"))
-                        BuildScript.CopyToStreamingAssets(PackageResourceType.Full);
+                        EditorUtility.DisplayDialog("提示", "增量模式启动，是否复制资源到StreamingAssets", "复制"))
+                        BuildScript.CopyToStreamingAssets(true);
 
                     break;
                 default:

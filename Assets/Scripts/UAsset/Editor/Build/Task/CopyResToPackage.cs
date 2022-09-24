@@ -14,7 +14,7 @@ namespace UAsset.Editor
 
         protected override void DoTask()
         {
-            BuildScript.CopyToStreamingAssets(_task.packageResourceType, _task.buildVariant);
+            BuildScript.CopyToStreamingAssets(_task.fullCopy, _task.buildVariant);
         }
     }
 }

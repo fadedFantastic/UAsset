@@ -29,10 +29,7 @@ namespace UAsset.Editor
         /// </summary>
         [Tooltip("播放器的运行模式")] 
         public ScriptPlayMode scriptPlayMode = ScriptPlayMode.Simulation;
-        
-        [Header("Encryption")][Tooltip("是否开启加密模式")] 
-        public bool encryptionEnabled = true; 
-        
+
         [Tooltip("加密需要过滤的文件")]
         public List<string> encryptionExcludeFiles = new List<string> 
         {
@@ -41,10 +38,8 @@ namespace UAsset.Editor
         };
 
         public static List<string> ExcludeFiles { get; private set; }
-        public static bool EncryptionEnabled { get; private set; }
         public static List<string> EncryptionExcludeFiles { get; private set; }
         
-
         /// <summary>
         ///     固定的打包输出目录(为了增量打包)
         /// </summary>
@@ -66,13 +61,12 @@ namespace UAsset.Editor
         public void Initialize()
         {
             ExcludeFiles = excludeFiles;
-            EncryptionEnabled = encryptionEnabled;
             EncryptionExcludeFiles = encryptionExcludeFiles;
         }
 
         public static Settings GetDefaultSettings()
         {
-            return EditorUtility.FindOrCreateAsset<Settings>(kSettingPath);
+            return EditorHelper.FindOrCreateAsset<Settings>(kSettingPath);
         }
 
         /// <summary>

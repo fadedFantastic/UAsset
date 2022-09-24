@@ -59,6 +59,40 @@ namespace UAsset.Editor
         
         #endregion
 
+        #region 工具窗口
+        
+        [MenuItem(kUAssetToolMenu + "资源包构建窗口", false, 50)]
+        public static void ShowBundleBuildPanel()
+        {
+            BundleBuildWindow.ShowWindow();
+        }
+
+        [MenuItem(kUAssetToolMenu + "自动分析面板", false, 51)]
+        public static void ShowAssetBundleAutoAnalysisPanel()
+        {
+            AssetBundleAutoAnalysisPanel.ShowWindow();
+        }
+
+        [MenuItem(kUAssetToolMenu + "运行时信息面板", false, 52)]
+        public static void ShowRuntimeInfoPanel()
+        {
+            RuntimeInfoWindow.ShowWindow();
+        }
+
+        [MenuItem(kUAssetToolMenu + "补丁包比对工具", false, 53)]
+        public static void ShowPatchComparePanel()
+        {
+            PatchCompareWindow.ShowWindow();
+        }
+
+        [MenuItem(kUAssetToolMenu + "解密bundle包工具", false, 54)]
+        public static void ShowDecryptBundleWindow()
+        {
+            DecryptBundleWindow.ShowWindow();
+        }
+        
+        #endregion
+
         [MenuItem(kUAssetToolMenu + "Clear Build", false, 800)]
         public static void ClearBuild()
         {
@@ -86,7 +120,7 @@ namespace UAsset.Editor
         [MenuItem(kUAssetToolMenu + "Copy Build to StreamingAssets", false, 800)]
         public static void CopyBuildToStreamingAssets()
         {
-            BuildScript.CopyToStreamingAssets(PackageResourceType.Full);
+            BuildScript.CopyToStreamingAssets(true);
         }
         
         [MenuItem(kUAssetToolMenu + "Select UAsset Settings", false, 850)]
@@ -95,14 +129,6 @@ namespace UAsset.Editor
             var settings = Settings.GetDefaultSettings();
             EditorGUIUtility.PingObject(settings);
             Selection.activeObject = settings;
-        }
-        
-        // TODO: 临时的，写个面板
-        [MenuItem(kUAssetToolMenu + "Build AssetBundle")]
-        public static void BuildAssetBundle()
-        {
-            AssetBundleAutoAnalysisPanel.AutoAnalysis();
-            BuildScript.BuildBundles();
         }
     }
 }

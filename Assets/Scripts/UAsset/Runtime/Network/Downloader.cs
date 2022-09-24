@@ -76,9 +76,7 @@ namespace UAsset
         /// <returns>指定文件的下载地址</returns>
         public static string GetDownloadURL(string file)
         {
-            return Application.isEditor
-                ? $"{DownloadURL}{PathManager.PlatformName}/{file}"
-                : $"{DownloadURL}{file}";
+            return $"{DownloadURL}{PathManager.PlatformName}/{file}";
         }
 
         [RuntimeInitializeOnLoadMethod]

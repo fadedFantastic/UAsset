@@ -6,21 +6,20 @@ using UnityEngine;
 
 namespace UAsset.Editor
 {
-    public class DecryptBundleTool : EditorWindow
+    public class DecryptBundleWindow : EditorWindow
     {
-        static DecryptBundleTool _thisInstance;
+        static DecryptBundleWindow _thisInstance;
         
         private string _bundlesPath = string.Empty;
         private string _saveDir = string.Empty;
         private string _destinationPath = string.Empty;
         private string _decryptDirName = "Decrypt";
-
-        [MenuItem(MenuItems.kUAssetToolMenu + "解密bundle包工具", false, 55)]
-        static void ShowWindow()
+        
+        public static void ShowWindow()
         {
             if (_thisInstance == null)
             {
-                _thisInstance = GetWindow(typeof(DecryptBundleTool), false, "解密bundle包", true) as DecryptBundleTool;
+                _thisInstance = GetWindow(typeof(DecryptBundleWindow), false, "解密bundle包", true) as DecryptBundleWindow;
                 _thisInstance.minSize = new Vector2(600, 400);
             }
             _thisInstance.Show();

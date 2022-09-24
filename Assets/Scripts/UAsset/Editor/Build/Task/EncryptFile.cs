@@ -16,10 +16,10 @@ namespace UAsset.Editor
 
         protected override void DoTask()
         {
-            Debug.Log($"是否开启文件加密模式 : {Settings.EncryptionEnabled}");
+            Debug.Log($"是否开启文件加密模式 : {_task.encryptionEnable}");
             Debug.Log($"加密忽略文件后缀名： {String.Join(",", Settings.EncryptionExcludeFiles)}");
 
-            if (!Settings.EncryptionEnabled) return;
+            if (!_task.encryptionEnable) return;
 
             var bundles = _task.bundles;
             for(var index = 0; index < bundles.Count; ++index)

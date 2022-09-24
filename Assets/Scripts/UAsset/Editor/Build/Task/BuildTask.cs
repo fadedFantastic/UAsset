@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -20,16 +21,24 @@ namespace UAsset.Editor
 
         public string buildVariant { get; }
         public BuildRules buildRules { get; }
-        public PackageResourceType packageResourceType { get; }
+        public bool fullCopy { get; }
+        public BuildAssetBundleOptions buildOptions { get; }
+        public bool encryptionEnable { get; }
 
-        public BuildTask(int version, string abPath, PackageResourceType copyResType, string variant) : this("Manifest")
+        /// <summary>
+        /// 构建任务
+        /// </summary>
+        /// <param name="buildParameters">构建参数</param>
+        public BuildTask(BundleBuildParameters buildParameters) : this("Manifest")
         {
-            buildVersion = version;
-            packageResourceType = copyResType;
-            buildVariant = variant;
+            buildVersion = buildParameters.manifestVersion;
+            fullCopy = buildParameters.copyToStreamingAssets;
+            buildVariant = buildParameters.builtinVariant;
+            buildOptions = buildParameters.buildOptions;
+            encryptionEnable = buildParameters.encryptionEnable;
             buildRules = GetBuildRules();
             
-            Utility.BuildPath = abPath ?? Utility.BuildPath;
+            Utility.BuildPath = buildParameters.abPath ?? Utility.BuildPath;
             outputPath = Settings.PlatformBuildPath;
 
             jobs.Add(new VerifyBuild(this));
@@ -99,8 +108,8 @@ namespace UAsset.Editor
             var info = new FileInfo(GetBuildPath(file));
             var buildVersions = BuildVersions.Load(GetBuildPath(Versions.Filename));
             buildVersions.Set(name, file, info.Length, timestamp, hash, Application.version, buildVersion);
-            buildVersions.encryptionEnabled = Settings.EncryptionEnabled;
-            buildVersions.buildinVariant = buildVariant;
+            buildVersions.encryptionEnabled = encryptionEnable;
+            buildVersions.builtinVariant = buildVariant;
             buildVersions.variantTypes = buildRules.variantDirNames;
             buildVersions.variantVersion = Enumerable.Repeat(0, buildVersions.variantTypes.Length).ToList();;
             
@@ -109,7 +118,7 @@ namespace UAsset.Editor
         
         private BuildRules GetBuildRules ()
         {
-            return EditorUtility.FindOrCreateAsset<BuildRules>(BuildRules.ruleConfigPath);
+            return EditorHelper.FindOrCreateAsset<BuildRules>(BuildRules.ruleConfigPath);
         }
     }
 }

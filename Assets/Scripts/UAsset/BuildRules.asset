@@ -12,19 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9e9ca5b8c7923e4fa378ac0b6fa8fe2, type: 3}
   m_Name: BuildRules
   m_EditorClassIdentifier: 
-  variantRootPath: Arts/Variant
+  variantRootPath: 
   variantRules:
-  - valid: 1
+  - valid: 0
     searchPath: 
     tag: 
     packRule: 1
     assetBundleName: 
     packed: 1
     filterRule: CollectAll
-  variantDirNames:
-  - cn
-  - en
-  - jp
+  variantDirNames: []
   rules:
   - valid: 1
     searchPath: Res/RawText
@@ -47,6 +44,13 @@ MonoBehaviour:
     assetBundleName: 
     packed: 1
     filterRule: CollectPrefab
+  - valid: 1
+    searchPath: Res/UISprite
+    tag: 
+    packRule: 2
+    assetBundleName: 
+    packed: 1
+    filterRule: CollectAll
   ruleAssets:
   - assetName: Assets/Res/RawText/rawText1.txt
     bundle: Assets/Res/RawText/rawText1_txt_ab
@@ -59,6 +63,46 @@ MonoBehaviour:
   - assetName: Assets/Res/Scene/SubScene.unity
     bundle: Assets/Res/Scene/SubScene_unity_ab
     guid: 711c0b51472c8344099bbab3a178bd0b
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_1.png
+    bundle: Assets/Res/UISprite_ab
+    guid: a1da95e5af03e1f43a8f6a53c14b94a3
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_10.png
+    bundle: Assets/Res/UISprite_ab
+    guid: 758b68e757cfe9e47bc1871a4273d22b
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_2.png
+    bundle: Assets/Res/UISprite_ab
+    guid: b55f5a6e77410124d83d60941b318f67
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_3.png
+    bundle: Assets/Res/UISprite_ab
+    guid: f9aa8f52ca4cc4b4d978f95edd5ca4fb
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_4.png
+    bundle: Assets/Res/UISprite_ab
+    guid: 3a71d90c27444c747ae9d1a079a99c89
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_5.png
+    bundle: Assets/Res/UISprite_ab
+    guid: 0f97a0ecacaafd740b0d2d5384b7c340
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_6.png
+    bundle: Assets/Res/UISprite_ab
+    guid: 434aa778b7d54d941855da5a9b8c0182
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_7.png
+    bundle: Assets/Res/UISprite_ab
+    guid: 471a0abc476fd3c4a92b0ca3c4544ef2
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_8.png
+    bundle: Assets/Res/UISprite_ab
+    guid: 42995e24415392c439f08b5f0718b42b
+    resourceVariant: 
+  - assetName: Assets/Res/UISprite/daggers_9.png
+    bundle: Assets/Res/UISprite_ab
+    guid: c195b1a833107924f9e43f1c97c5006d
     resourceVariant: 
   ruleBundles:
   - name: Assets/Res/RawText/rawText1_txt_ab
@@ -79,6 +123,22 @@ MonoBehaviour:
     packed: 1
     assets:
     - Assets/Res/Scene/SubScene.unity
+    variant: 
+    tag: 
+    packByRaw: 0
+  - name: Assets/Res/UISprite_ab
+    packed: 1
+    assets:
+    - Assets/Res/UISprite/daggers_1.png
+    - Assets/Res/UISprite/daggers_10.png
+    - Assets/Res/UISprite/daggers_2.png
+    - Assets/Res/UISprite/daggers_3.png
+    - Assets/Res/UISprite/daggers_4.png
+    - Assets/Res/UISprite/daggers_5.png
+    - Assets/Res/UISprite/daggers_6.png
+    - Assets/Res/UISprite/daggers_7.png
+    - Assets/Res/UISprite/daggers_8.png
+    - Assets/Res/UISprite/daggers_9.png
     variant: 
     tag: 
     packByRaw: 0

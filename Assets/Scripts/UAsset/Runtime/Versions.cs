@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace UAsset
 {
@@ -30,7 +31,7 @@ namespace UAsset
         /// <summary>
         ///     记录包内目录资源名
         /// </summary>
-        internal static readonly List<string> StreamingAssets = new List<string>();
+        internal static readonly HashSet<string> StreamingAssets = new HashSet<string>();
         
         /// <summary>
         ///     变体版本号
@@ -85,7 +86,7 @@ namespace UAsset
         /// <summary>
         ///     当前语言
         /// </summary>
-        public static string BuildinVariant { get; private set; }
+        public static string BuiltinVariant { get; private set; }
 
         /// <summary>
         ///     语言列表
@@ -141,10 +142,10 @@ namespace UAsset
 
             EncryptionEnabled = versions.encryptionEnabled;
             Timestamp = versions.timestamp;
-            StreamingAssets.AddRange(versions.streamingAssets);
+            StreamingAssets.UnionWith(versions.streamingAssets);
             OfflineMode = versions.offlineMode;
             SimulationMode = false;
-            BuildinVariant = versions.buildinVariant;
+            BuiltinVariant = versions.builtinVariant;
             VariantTypes = versions.variantTypes;
         }
 

@@ -22,6 +22,20 @@ namespace UAsset.Editor
         PackRawFile         // 原生文件    
     }
 
+    public enum CollectorType
+    {
+        /// <summary>
+        /// 收集参与打包的主资源对象，并写入到资源清单的资源列表里（可以通过代码加载）。
+        /// </summary>
+        MainAssetCollector,
+        
+        /// <summary>
+        /// 收集参与打包的依赖资源对象，目前为了灵活也写入资源列表里（可以通过代码加载）。
+        /// 注意：如果依赖资源对象没有被主资源对象引用，则不参与打包构建。
+        /// </summary>
+        DependAssetCollector
+    }
+
     [Serializable]
     public class RuleAsset
     {
@@ -47,7 +61,7 @@ namespace UAsset.Editor
     [Serializable]
     public class BuildRule
     {
-        public bool valid = true;
+        [Tooltip("是否激活规则")] public bool valid = true;
 
         [NonSerialized] public string prefixPath = "";
 
@@ -69,6 +83,7 @@ namespace UAsset.Editor
         /// <returns></returns>
         public string[] GetAssets()
         {
+            // 检测规则是否激活
             if (!valid) return Array.Empty<string>();
 
             var path = GetFullSearchPath();
@@ -111,7 +126,7 @@ namespace UAsset.Editor
         /// <summary>
         /// 资源和bundle的映射表
         /// </summary>
-        private readonly Dictionary<string, string> _asset2Bundles = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _asset2Bundle = new Dictionary<string, string>();
 
         /// <summary>
         /// 记录这个bundle用了哪条规则
@@ -201,6 +216,9 @@ namespace UAsset.Editor
         /// </summary>
         private void AnalysisAssets()
         {
+            // TODO：添加一种作为依赖收集的规则类型，检查这条规则里的资源是否被依赖，如果不被依赖就删掉
+            
+            
             var getBundles = GetBundles();
             int i = 0, max = getBundles.Count;
             foreach (var item in getBundles)
@@ -230,7 +248,7 @@ namespace UAsset.Editor
             {
                 if (map.Value.Count > 1) //如果资源被两个以上bundle包含
                 {
-                    _asset2Bundles.TryGetValue(map.Key, out var bundleName);
+                    _asset2Bundle.TryGetValue(map.Key, out var bundleName);
                     if (string.IsNullOrEmpty(bundleName)) // 资源尚未被加进任何bungle
                     {
                         // 为被多个bundle依赖的asset生成bundle名，并存储
@@ -271,12 +289,12 @@ namespace UAsset.Editor
                 if (asset.EndsWith(".shader"))
                 {
                     // 所有被共享的shader资源打成一个bundle
-                    _asset2Bundles[asset] = MakeBundleName("shaders", null);
+                    _asset2Bundle[asset] = MakeBundleName("shaders", null);
                 }
                 else
                 {
                     // 把依赖相同的资源打到同一个bundle
-                    _asset2Bundles[asset] = MakeBundleName(bundle, GetVariantName(asset));
+                    _asset2Bundle[asset] = MakeBundleName(bundle, GetVariantName(asset));
                 }
 
                 i++;
@@ -289,7 +307,7 @@ namespace UAsset.Editor
         private void MakeRuleAssetList()
         {
             var list = new List<RuleAsset>();
-            foreach (var item in _asset2Bundles)
+            foreach (var item in _asset2Bundle)
             {
                 var asset = new RuleAsset
                 {
@@ -390,13 +408,13 @@ namespace UAsset.Editor
         }
 
         /// <summary>
-        /// 获取bundle-assets映射表
+        /// 获取bundle名-assets映射表
         /// </summary>
         /// <returns></returns>
         private Dictionary<string, List<string>> GetBundles()
         {
             var bundles = new Dictionary<string, List<string>>();
-            foreach (var item in _asset2Bundles)
+            foreach (var item in _asset2Bundle)
             {
                 var bundle = item.Value;
                 if (!bundles.TryGetValue(bundle, out var list))
@@ -443,8 +461,8 @@ namespace UAsset.Editor
                     Debug.Assert(!string.IsNullOrEmpty(rule.assetBundleName),$" {rule} 需要指定 assetBundleName");
                     foreach (var asset in assets)
                     {
-                        _asset2Bundles[asset] = MakeBundleName(rule.assetBundleName, GetVariantName(asset));
-                        RecordBundleRule(_asset2Bundles[asset], rule);
+                        _asset2Bundle[asset] = MakeBundleName(rule.assetBundleName, GetVariantName(asset));
+                        RecordBundleRule(_asset2Bundle[asset], rule);
                     }
 
                     break;
@@ -461,8 +479,8 @@ namespace UAsset.Editor
                             assetPath = assetPath.Replace($"/{variant}", "");
                         }
                         
-                        _asset2Bundles[asset] = MakeBundleName(assetPath, variant);
-                        RecordBundleRule(_asset2Bundles[asset], rule);
+                        _asset2Bundle[asset] = MakeBundleName(assetPath, variant);
+                        RecordBundleRule(_asset2Bundle[asset], rule);
                     }
 
                     break;
@@ -479,8 +497,8 @@ namespace UAsset.Editor
                             dir = dir.Replace($"/{variant}", "");
                         }
                         
-                        _asset2Bundles[asset] = MakeBundleName(dir, variant);
-                        RecordBundleRule(_asset2Bundles[asset], rule);
+                        _asset2Bundle[asset] = MakeBundleName(dir, variant);
+                        RecordBundleRule(_asset2Bundle[asset], rule);
                     }
 
                     break;
@@ -501,8 +519,8 @@ namespace UAsset.Editor
                             }
                         }
 
-                        _asset2Bundles[asset] = MakeBundleName(dir, GetVariantName(dir));
-                        RecordBundleRule(_asset2Bundles[asset], rule);
+                        _asset2Bundle[asset] = MakeBundleName(dir, GetVariantName(dir));
+                        RecordBundleRule(_asset2Bundle[asset], rule);
                     }
 
                     break;
@@ -515,8 +533,8 @@ namespace UAsset.Editor
                         if (depends.Length != 1)
                             throw new Exception("RawFile cannot depend by other assets");
                         
-                        _asset2Bundles[asset] = MakeBundleName(asset, null);
-                        RecordBundleRule(_asset2Bundles[asset], rule);
+                        _asset2Bundle[asset] = MakeBundleName(asset, null);
+                        RecordBundleRule(_asset2Bundle[asset], rule);
                     }
                     break;
                 default:
@@ -530,7 +548,7 @@ namespace UAsset.Editor
             _tracker.Clear();
             _shared.Clear();
             _conflicted.Clear();
-            _asset2Bundles.Clear();
+            _asset2Bundle.Clear();
         }
 
         private void Save()
@@ -563,7 +581,7 @@ namespace UAsset.Editor
         /// <returns></returns>
         public string[] GetVariantDirNames()
         {
-            if (variantRootPath == null)
+            if (string.IsNullOrEmpty(variantRootPath))
             {
                 return Array.Empty<string>();
             }

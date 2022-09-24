@@ -28,7 +28,7 @@ namespace UAsset.Editor
             for (var index = 0; index < bundles.Count; index++)
             {
                 var bundle = bundles[index];
-                EditorUtility.Copy(bundle.nameWithAppendHash, destinationDir);
+                EditorHelper.Copy(bundle.nameWithAppendHash, destinationDir);
                 
                 UnityEditor.EditorUtility.DisplayProgressBar("Copy Bundle To Version Platform Path", bundle.nameWithAppendHash,
                     (index + 1) / (float)bundles.Count);
@@ -36,10 +36,10 @@ namespace UAsset.Editor
 
             foreach (var build in versions.data)
             {
-                EditorUtility.Copy(build.file, destinationDir);
+                EditorHelper.Copy(build.file, destinationDir);
             }
 
-            EditorUtility.Copy(Versions.Filename, destinationDir);
+            EditorHelper.Copy(Versions.Filename, destinationDir);
             
             UnityEditor.EditorUtility.ClearProgressBar();
         }

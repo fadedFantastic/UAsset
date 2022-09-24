@@ -14,7 +14,7 @@ namespace UAsset.Editor
 
         public BuildBundles(BuildTask task) : base(task)
         {
-            _options = BuildAssetBundleOptions.ChunkBasedCompression;
+            _options = task.buildOptions;
         }
 
         private ABuildPipeline BuildPipeline => customBuildPipeline != null

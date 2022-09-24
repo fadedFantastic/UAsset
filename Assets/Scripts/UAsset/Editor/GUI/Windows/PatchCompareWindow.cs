@@ -9,8 +9,8 @@ namespace UAsset.Editor
 	{
 		static PatchCompareWindow _thisInstance;
         
-        [MenuItem(MenuItems.kUAssetToolMenu + "补丁包比对工具", false, 50)]
-        static void ShowWindow()
+        [MenuItem(MenuItems.kUAssetToolMenu + "补丁包比对工具", false, 54)]
+        public static void ShowWindow()
 		{
 			if (_thisInstance == null)
 			{

@@ -9,16 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7cf8ace3117593347959cc1ce5c28ce4, type: 3}
-  m_Name: Settings
+  m_Script: {fileID: 11500000, guid: e4525858f0b3efd49a596d872d96c07d, type: 3}
+  m_Name: BuildParameters
   m_EditorClassIdentifier: 
-  requestCopy: 0
-  excludeFiles:
-  - .spriteatlas
-  - .giparams
-  - LightingData.asset
-  scriptPlayMode: 2
-  encryptionEnabled: 0
-  encryptionExcludeFiles:
-  - .mp4
-  - .bnk
+  manifestVersion: 1
+  buildOptions: 256
+  abPath: Bundles
+  builtinVariant: chinese
+  runRedundancyAnalyze: 1
+  copyToStreamingAssets: 1
+  encryptionEnable: 1

@@ -12,7 +12,7 @@ namespace UAsset.Editor
         /// <summary>
         ///     默认变体名，可自行配置
         /// </summary>
-        private const string BUILDIN_VARIANT = "chinese";
+        private const string BUILTIN_VARIANT = "chinese";
         public static Action<BuildTask> postprocessBuildBundles { get; set; }
         public static Action<BuildTask> preprocessBuildBundles { get; set; }
 
@@ -26,23 +26,18 @@ namespace UAsset.Editor
         /// <summary>
         /// 构建资源
         /// </summary>
-        /// <param name="resVersion">资源版本号</param>
-        /// <param name="abPath">构建路径</param>
-        /// <param name="copyResType">资源包类型</param>
-        /// <param name="variant">变体名</param>
-        public static void BuildBundles(int resVersion = -1, string abPath = null, 
-            PackageResourceType copyResType = PackageResourceType.Zero, string variant = BUILDIN_VARIANT)
+        /// <param name="buildParams">构建参数</param>
+        public static void BuildBundles(BundleBuildParameters buildParams)
         {
-            BuildBundles(new BuildTask(resVersion, abPath, copyResType, variant));
+            BuildBundles(new BuildTask(buildParams));
         }
 
         /// <summary>
         /// 拷贝打包资源到StreamingAssets目录
         /// </summary>
-        /// <param name="type">安装包资源类型</param>
+        /// <param name="fullCopy">全量拷贝到只读目录</param>
         /// <param name="variant">安装包默认语言</param>
-        public static void CopyToStreamingAssets(PackageResourceType type = PackageResourceType.Zero, 
-            string variant = BUILDIN_VARIANT)
+        public static void CopyToStreamingAssets(bool fullCopy, string variant = BUILTIN_VARIANT)
         {
             var destinationDir = Settings.BuildPlayerDataPath;
             if (Directory.Exists(destinationDir))
@@ -54,7 +49,7 @@ namespace UAsset.Editor
             var settings = Settings.GetDefaultSettings();
             var versions = BuildVersions.Load(Settings.GetBuildPath(Versions.Filename));
 
-            if (type == PackageResourceType.Full)
+            if (fullCopy)
             {
                 var bundles = settings.GetBundlesInBuild(versions);
                 for (var index = 0; index < bundles.Count; index++)
@@ -67,10 +62,10 @@ namespace UAsset.Editor
                     }
                     else
                     {
-                        EditorUtility.Copy(bundle.nameWithAppendHash, destinationDir);
+                        EditorHelper.Copy(bundle.nameWithAppendHash, destinationDir);
                     }
 
-                    UnityEditor.EditorUtility.DisplayProgressBar("Copy Bundle To StreamingAssets", bundle.nameWithAppendHash,
+                    EditorUtility.DisplayProgressBar("Copy Bundle To StreamingAssets", bundle.nameWithAppendHash,
                         (index + 1) / (float)bundles.Count);
                 }
                 
@@ -79,14 +74,13 @@ namespace UAsset.Editor
 
             foreach (var build in versions.data)
             {
-                EditorUtility.Copy(build.file, destinationDir);
+                EditorHelper.Copy(build.file, destinationDir);
             }
             
-            versions.encryptionEnabled = settings.encryptionEnabled;
             versions.offlineMode = false;
             File.WriteAllText($"{destinationDir}/{Versions.Filename}", JsonUtility.ToJson(versions, true));
             
-            UnityEditor.EditorUtility.ClearProgressBar();
+            EditorUtility.ClearProgressBar();
         }
 
         public static void ClearBuildFromSelection()
@@ -167,7 +161,7 @@ namespace UAsset.Editor
         {
             if (showTips)
             {
-                if (!UnityEditor.EditorUtility.DisplayDialog("提示", "清理构建数据将无法正常增量打包，确认清理？", "确定")) return;   
+                if (!EditorUtility.DisplayDialog("提示", "清理构建数据将无法正常增量打包，确认清理？", "确定")) return;   
             }
 
             var buildPath = Settings.PlatformBuildPath;

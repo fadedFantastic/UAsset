@@ -169,7 +169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   downloadURL: http://192.168.1.5/UAsset/
-  maxDownloads: 5
+  maxDownloads: 10
   maxDownloadSpeed: 4194304
   maxRetryTimes: 3
 --- !u!114 &183288668

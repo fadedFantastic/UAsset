@@ -33,7 +33,7 @@ namespace UAsset
         /// <summary>
         ///     包体默认变体类型
         /// </summary>
-        public string buildinVariant;
+        public string builtinVariant;
 
         /// <summary>
         ///     语言列表

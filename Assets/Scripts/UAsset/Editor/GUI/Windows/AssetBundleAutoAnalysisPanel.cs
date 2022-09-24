@@ -18,8 +18,7 @@ namespace UAsset.Editor
         
         private const float GAP = 5;
         
-        [MenuItem(MenuItems.kUAssetToolMenu + "自动分析面板", false, 55)]
-        private static void ShowWindow()
+        public static void ShowWindow()
         {
             GetWindow<AssetBundleAutoAnalysisPanel>("自动分析面板", true);
         }
@@ -106,7 +105,7 @@ namespace UAsset.Editor
         /// </summary>
         private static void InitConfig()
         {
-            _rules = EditorUtility.FindOrCreateAsset<BuildRules>(savePath);
+            _rules = EditorHelper.FindOrCreateAsset<BuildRules>(savePath);
         }
         
         /// <summary>
