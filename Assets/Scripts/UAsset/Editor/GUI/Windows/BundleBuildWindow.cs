@@ -14,8 +14,12 @@ namespace UAsset.Editor
 
         public static void ShowWindow()
         {
-            var window = GetWindow<BundleBuildWindow>("资源包构建窗口", true);
+            var window = GetWindow<BundleBuildWindow>("资源包构建窗口", true, typeof(AssetBundleAutoAnalysisPanel));
             window._bundleBuildParameters = EditorHelper.LoadSettingData<BundleBuildParameters>();
+            
+            GetWindow<AssetBundleAutoAnalysisPanel>("自动分析面板", false, typeof(BundleBuildWindow));
+            
+            window.Focus();
         }
 
         private void OnGUI()
@@ -30,10 +34,15 @@ namespace UAsset.Editor
             using (new EditorGUILayout.HorizontalScope())
             {
                 EditorGUILayout.LabelField("游戏版本号：" + Application.version, GUILayout.Width(200));
-
+            }
+            
+            EditorGUILayout.Space();
+            
+            using (new EditorGUILayout.HorizontalScope())
+            {
                 EditorGUILayout.LabelField("资源清单版本号：", GUILayout.Width(100));
                 _bundleBuildParameters.manifestVersion =
-                    EditorGUILayout.IntField(_bundleBuildParameters.manifestVersion, GUILayout.Width(50));
+                    EditorGUILayout.IntField(_bundleBuildParameters.manifestVersion);
             }
 
             EditorGUILayout.Space();
@@ -42,6 +51,7 @@ namespace UAsset.Editor
             //_bundleBuildParameters.targetPlatforms = EditorGUILayout.Popup()
 
             EditorGUILayout.Space();
+            
             EditorGUILayout.LabelField("选择资源包构建设置：");
             _bundleBuildParameters.buildOptions =
                 (BuildAssetBundleOptions) EditorGUILayout.EnumFlagsField(_bundleBuildParameters.buildOptions);
@@ -80,7 +90,7 @@ namespace UAsset.Editor
 
             EditorGUILayout.Space();
 
-            using (var toggle = new EditorGUILayout.ToggleGroupScope("自动分析依赖", 
+            using (var toggle = new EditorGUILayout.ToggleGroupScope("开启自动分析依赖", 
                        _bundleBuildParameters.runRedundancyAnalyze))
             {
                 _bundleBuildParameters.runRedundancyAnalyze = toggle.enabled;

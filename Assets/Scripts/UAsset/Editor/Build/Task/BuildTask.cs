@@ -118,7 +118,7 @@ namespace UAsset.Editor
         
         private BuildRules GetBuildRules ()
         {
-            return EditorHelper.FindOrCreateAsset<BuildRules>(BuildRules.ruleConfigPath);
+            return EditorHelper.FindOrCreateAsset<BuildRules>(BuildRules.kRuleConfigPath);
         }
     }
 }

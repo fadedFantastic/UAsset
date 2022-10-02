@@ -4,13 +4,12 @@ using System.IO;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace UAsset.Editor
 {
     public class AssetBundleAutoAnalysisPanel : EditorWindow
     {
-        private static string savePath = BuildRules.ruleConfigPath;
+        private static string savePath = BuildRules.kRuleConfigPath;
         private static BuildRules _rules;
         private ReorderableList _list;
         private ReorderableList _variantList;
@@ -202,6 +201,13 @@ namespace UAsset.Editor
                     var ruleIndex = Array.IndexOf(ruleNames, rule.filterRule);
                     index = EditorGUI.Popup(r, ruleIndex, ruleNames);
                     rule.filterRule = ruleNames[index];
+                }
+
+                // 收集器类型
+                {
+                    r.xMin = r.xMax + GAP;
+                    r.width = 160;
+                    rule.collectorType = (CollectorType)EditorGUI.EnumPopup(r, rule.collectorType);
                 }
 
                 // 手动指定bundle名
