@@ -40,6 +40,8 @@ namespace UAsset
         [Conditional("DEBUG")]
         private static void AddTimes(Loadable obj, IDictionary<string, int> dict)
         {
+            if (obj is Dependencies) return;
+
             if (!dict.TryGetValue(obj.pathOrURL, out var times))
             {
                 dict[obj.pathOrURL] = 1;

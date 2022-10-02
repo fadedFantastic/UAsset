@@ -8,11 +8,11 @@ using UnityEngine;
 namespace UAsset.Editor
 {
 
-    public sealed class RuntimeInfoTreeViewItem : TreeViewItem
+    public sealed class RuntimeAssetTreeViewItem : TreeViewItem
     {
         public readonly Loadable data;
 
-        public RuntimeInfoTreeViewItem(Loadable loadable, int depth) : base(loadable.pathOrURL.GetHashCode(), depth)
+        public RuntimeAssetTreeViewItem(Loadable loadable, int depth) : base(loadable.pathOrURL.GetHashCode(), depth)
         {
             if (loadable.pathOrURL.StartsWith("Assets/"))
             {
@@ -28,12 +28,14 @@ namespace UAsset.Editor
         }
     }
     
-    public class RuntimeInfoTreeView : TreeView
+    public class RuntimeAssetTreeView : TreeView
     {
 
         private List<Loadable> assets = new List<Loadable>();
+        
+        private readonly List<TreeViewItem> result = new List<TreeViewItem>();
 
-        internal RuntimeInfoTreeView(TreeViewState state, MultiColumnHeaderState headerState) : base(state,
+        internal RuntimeAssetTreeView(TreeViewState state, MultiColumnHeaderState headerState) : base(state,
             new MultiColumnHeader(headerState))
         {
             showBorder = true;
@@ -63,47 +65,47 @@ namespace UAsset.Editor
                 new MultiColumnHeaderState.Column
                 {
                     headerContent = new GUIContent("Path"),
-                    minWidth = 300,
-                    width = 350,
+                    minWidth = 600,
+                    width = 600,
                     headerTextAlignment = TextAlignment.Left,
                     canSort = true,
-                    autoResize = true
+                    autoResize = false
                 },
                 new MultiColumnHeaderState.Column
                 {
                     headerContent = new GUIContent("Size"),
-                    minWidth = 32,
-                    width = 50,
+                    minWidth = 100,
+                    width = 100,
                     headerTextAlignment = TextAlignment.Center,
                     canSort = true,
-                    autoResize = true
+                    autoResize = false
                 },
                 new MultiColumnHeaderState.Column
                 {
                     headerContent = new GUIContent("Loads"),
-                    minWidth = 32,
-                    width = 50,
+                    minWidth = 100,
+                    width = 100,
                     headerTextAlignment = TextAlignment.Center,
                     canSort = true,
-                    autoResize = true
+                    autoResize = false
                 },
                 new MultiColumnHeaderState.Column
                 {
                     headerContent = new GUIContent("Unloads"),
-                    minWidth = 60,
-                    width = 70,
+                    minWidth = 100,
+                    width = 100,
                     headerTextAlignment = TextAlignment.Center,
                     canSort = true,
-                    autoResize = true
+                    autoResize = false
                 },
                 new MultiColumnHeaderState.Column
                 {
                     headerContent = new GUIContent("References"),
-                    minWidth = 80,
+                    minWidth = 100,
                     width = 100,
                     headerTextAlignment = TextAlignment.Center,
                     canSort = true,
-                    autoResize = true
+                    autoResize = false
                 }
             };
         }
@@ -113,7 +115,7 @@ namespace UAsset.Editor
             var root = new TreeViewItem(-1, -1);
             foreach (var asset in assets)
             {
-                root.AddChild(new RuntimeInfoTreeViewItem(asset, 0));
+                root.AddChild(new RuntimeAssetTreeViewItem(asset, 0));
             }
 
             return root;
@@ -121,15 +123,44 @@ namespace UAsset.Editor
 
         protected override IList<TreeViewItem> BuildRows(TreeViewItem root)
         {
-            // TODO: 搜索显示
-            return base.BuildRows(root);
+            var rows = base.BuildRows(root);
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                result.Clear();
+                var stack = new Stack<TreeViewItem>();
+                foreach (var item in rows)
+                {
+                    stack.Push(item);
+                }
+
+                while (stack.Count > 0)
+                {
+                    var current = stack.Pop();
+                    if (current.displayName.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        result.Add(current);
+                    }
+
+                    if (current.children != null && current.children.Count > 0)
+                    {
+                        foreach (var item in current.children)
+                        {
+                            stack.Push(item);
+                        }
+                    }
+                }
+
+                rows = result;
+            }
+
+            return rows;
         }
 
         protected override void RowGUI(RowGUIArgs args)
         {
             for (var i = 0; i < args.GetNumVisibleColumns(); ++i)
             {
-                var item = (RuntimeInfoTreeViewItem)args.item;
+                var item = (RuntimeAssetTreeViewItem)args.item;
                 if (item == null || item.data == null)
                 {
                     using (new EditorGUI.DisabledScope())
@@ -144,7 +175,7 @@ namespace UAsset.Editor
             }
         }
 
-        private void CellGUI(Rect cellRect, RuntimeInfoTreeViewItem item, int column, ref RowGUIArgs args)
+        private void CellGUI(Rect cellRect, RuntimeAssetTreeViewItem item, int column, ref RowGUIArgs args)
         {
             CenterRectUsingSingleLineHeight(ref cellRect);
 
@@ -178,6 +209,14 @@ namespace UAsset.Editor
                     DefaultGUI.Label(cellRect, item.data.referenceCount.ToString(), args.selected, args.focused);
                     break;
             }
+        }
+
+        protected override void SingleClickedItem(int id)
+        {
+            base.SingleClickedItem(id);
+            
+            var item = FindItem(id, rootItem);
+            
         }
 
         public void SetAssets(List<Loadable> loadables)
