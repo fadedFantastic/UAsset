@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4525858f0b3efd49a596d872d96c07d, type: 3}
   m_Name: BuildParameters
   m_EditorClassIdentifier: 
-  manifestVersion: 1
+  manifestVersion: 10
   buildOptions: 256
   abPath: Bundles
   builtinVariant: chinese
   runRedundancyAnalyze: 1
-  copyToStreamingAssets: 1
-  encryptionEnable: 1
+  copyToStreamingAssets: 0
+  encryptionEnable: 0
