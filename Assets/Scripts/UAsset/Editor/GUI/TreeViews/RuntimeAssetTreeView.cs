@@ -30,14 +30,26 @@ namespace UAsset.Editor
     
     public class RuntimeAssetTreeView : TreeView
     {
-
+        private RuntimeInfoWindow _editor;
         private List<Loadable> assets = new List<Loadable>();
-        
+
         private readonly List<TreeViewItem> result = new List<TreeViewItem>();
 
-        internal RuntimeAssetTreeView(TreeViewState state, MultiColumnHeaderState headerState) : base(state,
-            new MultiColumnHeader(headerState))
+        private enum AssetColumn
         {
+            Path,           // 资源路径
+            Size,           // 资源大小
+            LoadScene,      // 被加载的场景
+            LoadTimes,      // 加载次数
+            UnloadTimes,    // 卸载次数
+            References,     // 引用计数次数
+        }
+        
+        internal RuntimeAssetTreeView(TreeViewState state, MultiColumnHeaderState headerState,
+            RuntimeInfoWindow editor) : 
+            base(state, new MultiColumnHeader(headerState))
+        {
+            _editor = editor;
             showBorder = true;
             showAlternatingRowBackgrounds = true;
             extraSpaceBeforeIconAndLabel = 5;
@@ -82,7 +94,7 @@ namespace UAsset.Editor
                 },
                 new MultiColumnHeaderState.Column
                 {
-                    headerContent = new GUIContent("Loads"),
+                    headerContent = new GUIContent("LoadScene"),
                     minWidth = 100,
                     width = 100,
                     headerTextAlignment = TextAlignment.Center,
@@ -91,7 +103,16 @@ namespace UAsset.Editor
                 },
                 new MultiColumnHeaderState.Column
                 {
-                    headerContent = new GUIContent("Unloads"),
+                    headerContent = new GUIContent("LoadTimes"),
+                    minWidth = 100,
+                    width = 100,
+                    headerTextAlignment = TextAlignment.Center,
+                    canSort = true,
+                    autoResize = false
+                },
+                new MultiColumnHeaderState.Column
+                {
+                    headerContent = new GUIContent("UnloadTimes"),
                     minWidth = 100,
                     width = 100,
                     headerTextAlignment = TextAlignment.Center,
@@ -117,7 +138,6 @@ namespace UAsset.Editor
             {
                 root.AddChild(new RuntimeAssetTreeViewItem(asset, 0));
             }
-
             return root;
         }
 
@@ -160,8 +180,8 @@ namespace UAsset.Editor
         {
             for (var i = 0; i < args.GetNumVisibleColumns(); ++i)
             {
-                var item = (RuntimeAssetTreeViewItem)args.item;
-                if (item == null || item.data == null)
+                var item = args.item as RuntimeAssetTreeViewItem;
+                if (item?.data == null)
                 {
                     using (new EditorGUI.DisabledScope())
                     {
@@ -170,18 +190,18 @@ namespace UAsset.Editor
                 }
                 else
                 {
-                    CellGUI(args.GetCellRect(i), item, args.GetColumn(i), ref args);
+                    CellGUI(args.GetCellRect(i), item, (AssetColumn)args.GetColumn(i), ref args);
                 }
             }
         }
 
-        private void CellGUI(Rect cellRect, RuntimeAssetTreeViewItem item, int column, ref RowGUIArgs args)
+        private void CellGUI(Rect cellRect, RuntimeAssetTreeViewItem item, AssetColumn column, ref RowGUIArgs args)
         {
             CenterRectUsingSingleLineHeight(ref cellRect);
 
             switch (column)
             {
-                case 0:
+                case AssetColumn.Path:
                     var iconRect = new Rect(cellRect.x + 1, cellRect.y + 1, cellRect.height - 2, cellRect.height - 2);
                     if (item.icon != null)
                     {
@@ -196,16 +216,19 @@ namespace UAsset.Editor
                         args.focused);
                     
                     break;
-                case 1:
-                    DefaultGUI.Label(cellRect, UnityEditor.EditorUtility.FormatBytes(SizeOf(item.data)), args.selected, args.focused);
+                case AssetColumn.Size:
+                    DefaultGUI.Label(cellRect, EditorUtility.FormatBytes(SizeOf(item.data)), args.selected, args.focused);
                     break;
-                case 2:
+                case AssetColumn.LoadScene:
+                    DefaultGUI.Label(cellRect, item.data.loadScene, args.selected, args.focused);
+                    break;
+                case AssetColumn.LoadTimes:
                     DefaultGUI.Label(cellRect, item.data.loadTimes.ToString(), args.selected, args.focused);
                     break;
-                case 3:
+                case AssetColumn.UnloadTimes:
                     DefaultGUI.Label(cellRect, item.data.unloadTimes.ToString(), args.selected, args.focused);
                     break;
-                case 4:
+                case AssetColumn.References:
                     DefaultGUI.Label(cellRect, item.data.referenceCount.ToString(), args.selected, args.focused);
                     break;
             }
@@ -215,8 +238,13 @@ namespace UAsset.Editor
         {
             base.SingleClickedItem(id);
             
-            var item = FindItem(id, rootItem);
-            
+            var item = FindItem(id, rootItem) as RuntimeAssetTreeViewItem;
+            _editor.ReloadBundleView(item?.data.pathOrURL);
+        }
+
+        protected override bool CanMultiSelect(TreeViewItem item)
+        {
+            return false;
         }
 
         public void SetAssets(List<Loadable> loadables)
@@ -235,6 +263,5 @@ namespace UAsset.Editor
             var file = new FileInfo(loadable.pathOrURL);
             return file.Exists ? file.Length : 0;
         }
-
     }
 }

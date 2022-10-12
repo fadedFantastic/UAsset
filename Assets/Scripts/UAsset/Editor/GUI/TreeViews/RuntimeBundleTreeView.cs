@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Windows.Forms.DataVisualization.Charting;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -20,6 +19,8 @@ namespace UAsset.Editor
     
     public class RuntimeBundleTreeView : TreeView
     {
+        private List<Bundle> _bundles = new List<Bundle>();
+        
         internal RuntimeBundleTreeView(TreeViewState state, MultiColumnHeaderState headerState) : base(state,
             new MultiColumnHeader(headerState))
         {
@@ -67,6 +68,10 @@ namespace UAsset.Editor
         protected override TreeViewItem BuildRoot()
         {
             var root = new TreeViewItem(-1, -1);
+            foreach (var bundle in _bundles)
+            {
+                root.AddChild(new RuntimeBundleTreeViewItem(bundle, 0));
+            }
             return root;
         }
 
@@ -107,6 +112,12 @@ namespace UAsset.Editor
                     DefaultGUI.Label(cellRect, item.data.referenceCount.ToString(), args.selected, args.focused);
                     break;
             }
+        }
+
+        public void SetBundles(List<Bundle> loadables)
+        {
+            _bundles = loadables;
+            Reload();
         }
     }
 }

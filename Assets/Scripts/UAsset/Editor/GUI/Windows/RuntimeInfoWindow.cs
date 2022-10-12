@@ -6,16 +6,14 @@ using UnityEngine;
 
 namespace UAsset.Editor
 {
-    // 1.提供选框，切换显示加载的资源或bundle
-    // 2.
+    public enum RuntimeInfoWindowMode
+    {
+        AssetView,
+        BundleView
+    };
+    
     public class RuntimeInfoWindow : EditorWindow
     {
-        private enum Mode
-        {
-            AssetView,
-            BundleView
-        };
-        
         private const int k_ToolbarHeight = 40;
         [SerializeField] private MultiColumnHeaderState _assetMultiColumnHeaderState;
         [SerializeField] private MultiColumnHeaderState _bundleMultiColumnHeaderState;
@@ -25,10 +23,12 @@ namespace UAsset.Editor
         private RuntimeAssetTreeView _assetTreeView;
         private RuntimeBundleTreeView _bundleTreeView;
         
-        private List<Loadable> _loadables = new List<Loadable>();
-        private readonly Dictionary<int, List<Loadable>> _frameWithLoadables = new Dictionary<int, List<Loadable>>();
-
-        private Mode _mode = Mode.AssetView;
+        private List<Loadable> _assets = new List<Loadable>();
+        private List<Bundle> _bundles = new List<Bundle>();
+        private readonly Dictionary<int, List<Loadable>> _frameWithAssets = new Dictionary<int, List<Loadable>>();
+        private readonly Dictionary<int, List<Bundle>> _frameWithBundles = new Dictionary<int, List<Bundle>>();
+        
+        private RuntimeInfoWindowMode _mode = RuntimeInfoWindowMode.AssetView;
         private VerticalSplitter _verticalSplitter;
         
         private bool _recording = true;
@@ -68,8 +68,8 @@ namespace UAsset.Editor
                 }
 
                 _assetMultiColumnHeaderState = headerState;
-                _assetTreeView = new RuntimeAssetTreeView(_assetTreeViewState, headerState);
-                _assetTreeView.SetAssets(_loadables);
+                _assetTreeView = new RuntimeAssetTreeView(_assetTreeViewState, headerState, this);
+                _assetTreeView.SetAssets(_assets);
             }
 
             if (_bundleTreeView == null)
@@ -82,7 +82,7 @@ namespace UAsset.Editor
                 }
                 
                 _bundleTreeView = new RuntimeBundleTreeView(_bundleTreeViewState, headerState);
-                _bundleTreeView.Reload();
+                _bundleTreeView.SetBundles(_bundles);
             }
 
             if (_searchField == null)
@@ -101,7 +101,7 @@ namespace UAsset.Editor
         {
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
             {
-                _mode = (Mode)EditorGUILayout.EnumPopup(_mode, EditorStyles.toolbarDropDown, GUILayout.Width(100));
+                _mode = (RuntimeInfoWindowMode)EditorGUILayout.EnumPopup(_mode, EditorStyles.toolbarDropDown, GUILayout.Width(100));
                 _assetTreeView.searchString = _searchField.OnToolbarGUI(_assetTreeView.searchString);
             }
 
@@ -136,7 +136,8 @@ namespace UAsset.Editor
                 if (GUILayout.Button("Clear", EditorStyles.toolbarButton, GUILayout.Width(80)))
                 {
                     _frame = 0;
-                    _loadables.Clear();
+                    _assets.Clear();
+                    _bundles.Clear();
                     ReloadFrameData();
                 }
             } 
@@ -166,39 +167,39 @@ namespace UAsset.Editor
         private void TakeSample()
         {
             _currentFrame = _frame = Time.frameCount;
-            _loadables = new List<Loadable>();
-
+            
+            _assets = new List<Loadable>();
             foreach (var item in Asset.Cache.Values)
             {
                 if (item.isDone)
                 {
-                    _loadables.Add(item);
+                    _assets.Add(item);
                 }
             }
-
-            foreach (var item in Bundle.Cache.Values)
-            {
-                if (item.isDone)
-                {
-                    _loadables.Add(item);
-                }
-            }
-            
             foreach (var item in RawAsset.Cache.Values)
             {
                 if (item.isDone)
                 {
-                    _loadables.Add(item);
+                    _assets.Add(item);
                 }
             }
-            
             if (Scene.main != null && Scene.main.isDone)
             {
-                _loadables.Add(Scene.main);
-                _loadables.AddRange(Scene.main.additives);
+                _assets.Add(Scene.main);
+                _assets.AddRange(Scene.main.additives);
             }
-
-            _frameWithLoadables[_frame] = _loadables;
+            _frameWithAssets[_frame] = _assets;
+            
+            _bundles = new List<Bundle>();
+            foreach (var item in Bundle.Cache.Values)
+            {
+                if (item.isDone)
+                {
+                    _bundles.Add(item);
+                }
+            }
+            _frameWithBundles[_frame] = _bundles;
+            
             ReloadFrameData();
         }
 
@@ -207,8 +208,19 @@ namespace UAsset.Editor
             if (_assetTreeView != null)
             {
                 _assetTreeView.SetAssets(
-                    _frameWithLoadables.TryGetValue(_frame, out var value) ? value : new List<Loadable>());
+                    _frameWithAssets.TryGetValue(_frame, out var value) ? value : new List<Loadable>());
             }
+            
+            if (_bundleTreeView != null)
+            {
+                _bundleTreeView.SetBundles(
+                    _frameWithBundles.TryGetValue(_frame, out var value) ? value : new List<Bundle>());
+            }
+        }
+
+        public void ReloadBundleView(string assetPath)
+        {
+            
         }
     }
 }

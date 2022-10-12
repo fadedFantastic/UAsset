@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace UAsset
 {
@@ -21,6 +22,7 @@ namespace UAsset
 
         public int loadTimes => GetTimes(pathOrURL, _loads);
         public int unloadTimes => GetTimes(pathOrURL, _unloads);
+        public string loadScene { get; private set; }
         public int referenceCount => _reference.count;
         
         public LoadableStatus status { get; protected set; } = LoadableStatus.Wait;
@@ -148,6 +150,8 @@ namespace UAsset
             Loading.Add(this);
             
             if (status != LoadableStatus.Wait) return;
+
+            loadScene = SceneManager.GetActiveScene().name;
             AddTimes(this, _loads);
             Logger.I("Load {0} {1}.", GetType().Name, pathOrURL);
             status = LoadableStatus.Loading;
