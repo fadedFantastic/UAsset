@@ -19,11 +19,21 @@ namespace UAsset.Editor
     
     public class RuntimeBundleTreeView : TreeView
     {
+        private readonly RuntimeInfoWindow _editor;
+        private static string _pathAlias = "Depend Bundles";
         private List<Bundle> _bundles = new List<Bundle>();
-        
-        internal RuntimeBundleTreeView(TreeViewState state, MultiColumnHeaderState headerState) : base(state,
-            new MultiColumnHeader(headerState))
+
+        private enum BundleColumn
         {
+            Path,
+            References
+        }
+
+        internal RuntimeBundleTreeView(TreeViewState state, MultiColumnHeaderState headerState, 
+            RuntimeInfoWindow editor) : 
+            base(state, new MultiColumnHeader(headerState))
+        {
+            _editor = editor;
             showBorder = true;
             showAlternatingRowBackgrounds = false;
         }
@@ -31,8 +41,6 @@ namespace UAsset.Editor
         public override void OnGUI(Rect rect)
         {
             base.OnGUI(rect);
-            
-            
         }
         
         internal static MultiColumnHeaderState CreateMultiColumnHeaderState()
@@ -46,7 +54,7 @@ namespace UAsset.Editor
             {
                 new MultiColumnHeaderState.Column
                 {
-                    headerContent = new GUIContent("Depend Bundles"),
+                    headerContent = new GUIContent(_pathAlias),
                     minWidth = 900,
                     width = 900,
                     headerTextAlignment = TextAlignment.Left,
@@ -94,29 +102,50 @@ namespace UAsset.Editor
                 }
                 else
                 {
-                    CellGUI(args.GetCellRect(i), item, args.GetColumn(i), ref args);
+                    CellGUI(args.GetCellRect(i), item, (BundleColumn)args.GetColumn(i), ref args);
                 }
             }
         }
 
-        private void CellGUI(Rect cellRect, RuntimeBundleTreeViewItem item, int column, ref RowGUIArgs args)
+        private void CellGUI(Rect cellRect, RuntimeBundleTreeViewItem item, BundleColumn column, ref RowGUIArgs args)
         {
             CenterRectUsingSingleLineHeight(ref cellRect);
 
             switch (column)
             {
-                case 0:
+                case BundleColumn.Path:
                     DefaultGUI.Label(cellRect, item.displayName, args.selected, args.focused);
                     break;
-                case 1:
+                case BundleColumn.References:
                     DefaultGUI.Label(cellRect, item.data.referenceCount.ToString(), args.selected, args.focused);
                     break;
             }
         }
-
-        public void SetBundles(List<Bundle> loadables)
+        
+        protected override void SingleClickedItem(int id)
         {
-            _bundles = loadables;
+            base.SingleClickedItem(id);
+            
+            var item = FindItem(id, rootItem) as RuntimeBundleTreeViewItem;
+            _editor.ReloadAssetView(item?.data.pathOrURL);
+        }
+
+        protected override bool CanMultiSelect(TreeViewItem item)
+        {
+            return false;
+        }
+        
+        public void SetAsMainView(bool setToMain)
+        {
+            showAlternatingRowBackgrounds = setToMain;
+            _pathAlias = setToMain ? "Bundle Name" : "Depend Bundles";
+            
+            
+        }
+
+        public void SetBundles(List<Bundle> bundles)
+        {
+            _bundles = bundles;
             Reload();
         }
     }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace UAsset
@@ -114,5 +115,12 @@ namespace UAsset
 
             Finish();
         }
+
+        #region 调试专用接口
+        public List<string> GetDebugDependBundle()
+        {
+            return _bundles.Select(i => i.pathOrURL).ToList();
+        }
+        #endregion
     }
 }

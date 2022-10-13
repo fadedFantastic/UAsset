@@ -30,10 +30,11 @@ namespace UAsset.Editor
     
     public class RuntimeAssetTreeView : TreeView
     {
-        private RuntimeInfoWindow _editor;
-        private List<Loadable> assets = new List<Loadable>();
+        private readonly RuntimeInfoWindow _editor;
+        private static string _pathAlias = "Asset Path";
+        private List<Loadable> _assets = new List<Loadable>();
 
-        private readonly List<TreeViewItem> result = new List<TreeViewItem>();
+        private readonly List<TreeViewItem> _result = new List<TreeViewItem>();
 
         private enum AssetColumn
         {
@@ -76,7 +77,7 @@ namespace UAsset.Editor
             {
                 new MultiColumnHeaderState.Column
                 {
-                    headerContent = new GUIContent("Path"),
+                    headerContent = new GUIContent(_pathAlias),
                     minWidth = 600,
                     width = 600,
                     headerTextAlignment = TextAlignment.Left,
@@ -134,7 +135,7 @@ namespace UAsset.Editor
         protected override TreeViewItem BuildRoot()
         {
             var root = new TreeViewItem(-1, -1);
-            foreach (var asset in assets)
+            foreach (var asset in _assets)
             {
                 root.AddChild(new RuntimeAssetTreeViewItem(asset, 0));
             }
@@ -146,7 +147,7 @@ namespace UAsset.Editor
             var rows = base.BuildRows(root);
             if (!string.IsNullOrEmpty(searchString))
             {
-                result.Clear();
+                _result.Clear();
                 var stack = new Stack<TreeViewItem>();
                 foreach (var item in rows)
                 {
@@ -158,7 +159,7 @@ namespace UAsset.Editor
                     var current = stack.Pop();
                     if (current.displayName.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
-                        result.Add(current);
+                        _result.Add(current);
                     }
 
                     if (current.children != null && current.children.Count > 0)
@@ -170,7 +171,7 @@ namespace UAsset.Editor
                     }
                 }
 
-                rows = result;
+                rows = _result;
             }
 
             return rows;
@@ -239,17 +240,23 @@ namespace UAsset.Editor
             base.SingleClickedItem(id);
             
             var item = FindItem(id, rootItem) as RuntimeAssetTreeViewItem;
-            _editor.ReloadBundleView(item?.data.pathOrURL);
+            _editor.ReloadBundleView(item?.data);
         }
 
         protected override bool CanMultiSelect(TreeViewItem item)
         {
             return false;
         }
-
-        public void SetAssets(List<Loadable> loadables)
+        
+        public void SetAsMainView(bool setToMain)
         {
-            assets = loadables;
+            showAlternatingRowBackgrounds = setToMain;
+            _pathAlias = setToMain ? "Asset Path" : "Using Assets";
+        }
+
+        public void SetAssets(List<Loadable> assets)
+        {
+            _assets = assets;
             Reload();
         }
         
