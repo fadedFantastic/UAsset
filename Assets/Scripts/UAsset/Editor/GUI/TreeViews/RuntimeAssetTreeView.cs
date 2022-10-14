@@ -230,13 +230,14 @@ namespace UAsset.Editor
             var file = new FileInfo(loadable.pathOrURL);
             return file.Exists ? file.Length : 0;
         }
-
-        protected override void SingleClickedItem(int id)
+        
+        protected override void SelectionChanged(IList<int> selectedIds)
         {
-            base.SingleClickedItem(id);
-            
-            var item = FindItem(id, rootItem) as RuntimeAssetTreeViewItem;
-            _editor.ReloadBundleView(item?.data);
+            if (selectedIds.Count > 0)
+            {
+                var item = FindItem(selectedIds[0], rootItem) as RuntimeAssetTreeViewItem;
+                _editor.ReloadBundleView(item?.data);
+            }
         }
 
         protected override void DoubleClickedItem(int id)

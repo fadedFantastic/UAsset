@@ -201,14 +201,15 @@ namespace UAsset.Editor
             }
         }
         
-        protected override void SingleClickedItem(int id)
+        protected override void SelectionChanged(IList<int> selectedIds)
         {
-            base.SingleClickedItem(id);
-            
-            var item = FindItem(id, rootItem) as RuntimeBundleTreeViewItem;
-            _editor.ReloadAssetView(item?.data.pathOrURL);
+            if (selectedIds.Count > 0)
+            {
+                var item = FindItem(selectedIds[0], rootItem) as RuntimeBundleTreeViewItem;
+                _editor.ReloadAssetView(item?.data.pathOrURL);
+            }
         }
-        
+
         protected override bool CanMultiSelect(TreeViewItem item)
         {
             return false;
