@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -31,10 +32,7 @@ namespace UAsset.Editor
     public class RuntimeAssetTreeView : TreeView
     {
         private readonly RuntimeInfoWindow _editor;
-        private static string _pathAlias = "Asset Path";
         private List<Loadable> _assets = new List<Loadable>();
-
-        private readonly List<TreeViewItem> _result = new List<TreeViewItem>();
 
         private enum AssetColumn
         {
@@ -43,8 +41,18 @@ namespace UAsset.Editor
             LoadScene,      // 被加载的场景
             LoadTimes,      // 加载次数
             UnloadTimes,    // 卸载次数
-            References,     // 引用计数次数
+            Reference,      // 引用计数次数
         }
+        
+        private readonly AssetColumn[] _sortOptions =
+        {
+            AssetColumn.Path,
+            AssetColumn.Size,
+            AssetColumn.LoadScene,
+            AssetColumn.LoadTimes,
+            AssetColumn.UnloadTimes,
+            AssetColumn.Reference,
+        };
         
         internal RuntimeAssetTreeView(TreeViewState state, MultiColumnHeaderState headerState,
             RuntimeInfoWindow editor) : 
@@ -54,16 +62,12 @@ namespace UAsset.Editor
             showBorder = true;
             showAlternatingRowBackgrounds = true;
             extraSpaceBeforeIconAndLabel = 5;
+            multiColumnHeader.sortingChanged += OnSortingChanged;
         }
         
         public override void OnGUI(Rect rect)
         {
             base.OnGUI(rect);
-            if (Event.current.type == EventType.MouseDown && Event.current.button == 0 &&
-                rect.Contains(Event.current.mousePosition))
-            {
-                SetSelection(Array.Empty<int>(), TreeViewSelectionOptions.FireSelectionChanged);
-            }
         }
 
         internal static MultiColumnHeaderState CreateMultiColumnHeaderState()
@@ -77,9 +81,9 @@ namespace UAsset.Editor
             {
                 new MultiColumnHeaderState.Column
                 {
-                    headerContent = new GUIContent(_pathAlias),
-                    minWidth = 600,
-                    width = 600,
+                    headerContent = new GUIContent("Asset Path"),
+                    minWidth = 500,
+                    width = 500,
                     headerTextAlignment = TextAlignment.Left,
                     canSort = true,
                     autoResize = false
@@ -122,7 +126,7 @@ namespace UAsset.Editor
                 },
                 new MultiColumnHeaderState.Column
                 {
-                    headerContent = new GUIContent("References"),
+                    headerContent = new GUIContent("Reference"),
                     minWidth = 100,
                     width = 100,
                     headerTextAlignment = TextAlignment.Center,
@@ -147,33 +151,19 @@ namespace UAsset.Editor
             var rows = base.BuildRows(root);
             if (!string.IsNullOrEmpty(searchString))
             {
-                _result.Clear();
-                var stack = new Stack<TreeViewItem>();
-                foreach (var item in rows)
+                var result = new List<TreeViewItem>();
+                foreach (var current in rows)
                 {
-                    stack.Push(item);
-                }
-
-                while (stack.Count > 0)
-                {
-                    var current = stack.Pop();
                     if (current.displayName.IndexOf(searchString, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
-                        _result.Add(current);
-                    }
-
-                    if (current.children != null && current.children.Count > 0)
-                    {
-                        foreach (var item in current.children)
-                        {
-                            stack.Push(item);
-                        }
+                        result.Add(current);
                     }
                 }
 
-                rows = _result;
+                rows = result;
             }
 
+            SortIfNeeded(root, rows);
             return rows;
         }
 
@@ -229,10 +219,16 @@ namespace UAsset.Editor
                 case AssetColumn.UnloadTimes:
                     DefaultGUI.Label(cellRect, item.data.unloadTimes.ToString(), args.selected, args.focused);
                     break;
-                case AssetColumn.References:
+                case AssetColumn.Reference:
                     DefaultGUI.Label(cellRect, item.data.referenceCount.ToString(), args.selected, args.focused);
                     break;
             }
+        }
+        
+        private static long SizeOf(Loadable loadable)
+        {
+            var file = new FileInfo(loadable.pathOrURL);
+            return file.Exists ? file.Length : 0;
         }
 
         protected override void SingleClickedItem(int id)
@@ -243,32 +239,111 @@ namespace UAsset.Editor
             _editor.ReloadBundleView(item?.data);
         }
 
+        protected override void DoubleClickedItem(int id)
+        {
+            var assetItem = FindItem(id, rootItem);
+            if (assetItem != null)
+            {
+                var o = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetItem.displayName);
+                EditorGUIUtility.PingObject(o);
+                Selection.activeObject = o;
+            }
+        }
+
         protected override bool CanMultiSelect(TreeViewItem item)
         {
             return false;
         }
         
+        private void OnSortingChanged(MultiColumnHeader header)
+        {
+            SortIfNeeded(rootItem, GetRows());
+        }
+
+        private void SortIfNeeded(TreeViewItem root, IList<TreeViewItem> rows)
+        {
+            if (rows.Count <= 1)
+                return;
+			
+            if (multiColumnHeader.sortedColumnIndex == -1)
+            {
+                return; // No column to sort for (just use the order the data are in)
+            }
+
+            SortByColumn();
+
+            rows.Clear();
+            foreach (var t in root.children)
+            {
+                rows.Add(t);
+            }
+
+            Repaint();
+        }
+
+        private void SortByColumn()
+        {
+            var sortedColumns = multiColumnHeader.state.sortedColumns;
+            if (sortedColumns.Length == 0)
+            {
+                return;
+            }
+
+            var assetList = new List<TreeViewItem>(rootItem.children);
+            var orderedItems = InitialOrder(assetList, sortedColumns);
+            rootItem.children = orderedItems.ToList();
+        }
+
+        private IEnumerable<TreeViewItem> InitialOrder(IEnumerable<TreeViewItem> myTypes, int[] history)
+        {
+            var sortOption = _sortOptions[history[0]];
+            var ascending = multiColumnHeader.IsSortedAscending(history[0]);
+            switch (sortOption)
+            {
+                case AssetColumn.Path:
+                    return myTypes.Order(l => l.displayName, ascending);
+                case AssetColumn.Size:
+                    return myTypes.Order(l => SizeOf(((RuntimeAssetTreeViewItem)l).data), ascending);
+                case AssetColumn.LoadScene:
+                    return myTypes.Order(l => ((RuntimeAssetTreeViewItem)l).data.loadScene, ascending);
+                case AssetColumn.LoadTimes:
+                    return myTypes.Order(l => ((RuntimeAssetTreeViewItem)l).data.loadTimes, ascending);
+                case AssetColumn.UnloadTimes:
+                    return myTypes.Order(l => ((RuntimeAssetTreeViewItem)l).data.unloadTimes, ascending);
+                case AssetColumn.Reference:
+                    return myTypes.Order(l => ((RuntimeAssetTreeViewItem)l).data.referenceCount, ascending);
+            }
+
+            return myTypes.Order(l => new FileInfo(l.displayName).Length, ascending);
+        }
+
         public void SetAsMainView(bool setToMain)
         {
             showAlternatingRowBackgrounds = setToMain;
-            _pathAlias = setToMain ? "Asset Path" : "Using Assets";
+            searchString = string.Empty;
+            SetSelection(new List<int>());
+            if (!setToMain) ClearView();
         }
 
+        private void ClearView()
+        {
+            _assets.Clear();
+            Reload();
+        }
+        
         public void SetAssets(List<Loadable> assets)
         {
             _assets = assets;
             Reload();
         }
-        
-        private static long SizeOf(Loadable loadable)
+    }
+    
+    internal static class ExtensionMethods
+    {
+        internal static IOrderedEnumerable<T> Order<T, TKey>(this IEnumerable<T> source, Func<T, TKey> selector,
+            bool ascending)
         {
-            if (loadable is Bundle bundle)
-            {
-                return bundle.bundleInfo.size;
-            }
-
-            var file = new FileInfo(loadable.pathOrURL);
-            return file.Exists ? file.Length : 0;
+            return ascending ? source.OrderBy(selector) : source.OrderByDescending(selector);
         }
     }
 }

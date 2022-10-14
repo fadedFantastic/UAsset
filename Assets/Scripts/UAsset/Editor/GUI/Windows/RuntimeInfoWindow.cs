@@ -37,17 +37,43 @@ namespace UAsset.Editor
         private bool _recording = true;
         private int _currentFrame;
         private int _frame;
-
         private SearchField _searchField;
 
+        private static bool _needReset;
+        
         public static void ShowWindow()
         {
             var window = GetWindow<RuntimeInfoWindow>("运行时信息面板", true);
             window.minSize = new Vector2(1000, 600);
         }
+        
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredPlayMode)
+            {
+                _needReset = true;
+            }
+        }
+
+        private void OnEnable()
+        {
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        }
 
         private void Update()
         {
+            if (_needReset)
+            {
+                _needReset = false;
+                _recording = true;
+                ClearFrameData();
+            }
+            
             if (_recording && Application.isPlaying)
             {
                 TakeSample();
@@ -110,8 +136,11 @@ namespace UAsset.Editor
                 {
                     ChangeMainView();
                 }
-                
-                _assetTreeView.searchString = _searchField.OnToolbarGUI(_assetTreeView.searchString);
+
+                if (_mode == RuntimeInfoWindowMode.AssetView)
+                    _assetTreeView.searchString = _searchField.OnToolbarGUI(_assetTreeView.searchString);
+                else
+                    _bundleTreeView.searchString = _searchField.OnToolbarGUI(_bundleTreeView.searchString);
             }
 
             // 帧
@@ -248,9 +277,18 @@ namespace UAsset.Editor
                 }   
             }
         }
+        
+        private void ClearFrameData()
+        {
+            _frameWithAssets.Clear();
+            _frameWithBundles.Clear();
+            _frameAsset2Bundle.Clear();
+        }
 
         public void ReloadBundleView(Loadable asset)
         {
+            if (_mode == RuntimeInfoWindowMode.BundleView) return;
+            
             if (_frameAsset2Bundle.TryGetValue(_frame, out var value))
             {
                 if (value.TryGetValue(asset, out var bundles))
@@ -264,6 +302,8 @@ namespace UAsset.Editor
 
         public void ReloadAssetView(string bundleName)
         {
+            if (_mode == RuntimeInfoWindowMode.AssetView) return;
+            
             var result = new List<Loadable>();
             if (_frameAsset2Bundle.TryGetValue(_frame, out var value))
             {
@@ -277,12 +317,26 @@ namespace UAsset.Editor
             }
             _assetTreeView.SetAssets(result);
         }
-        
+
+        /// <summary>
+        /// 切换主视图
+        /// </summary>
         private void ChangeMainView()
         {
             var assetViewMode = _mode == RuntimeInfoWindowMode.AssetView;
             _assetTreeView.SetAsMainView(assetViewMode);
             _bundleTreeView.SetAsMainView(!assetViewMode);
+
+            if (assetViewMode)
+            {
+                _searchField.downOrUpArrowKeyPressed -= _bundleTreeView.SetFocusAndEnsureSelectedItem;
+                _searchField.downOrUpArrowKeyPressed += _assetTreeView.SetFocusAndEnsureSelectedItem;
+            }
+            else
+            {
+                _searchField.downOrUpArrowKeyPressed -= _assetTreeView.SetFocusAndEnsureSelectedItem;
+                _searchField.downOrUpArrowKeyPressed += _bundleTreeView.SetFocusAndEnsureSelectedItem;
+            }
         }
     }
 }
