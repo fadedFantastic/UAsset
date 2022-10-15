@@ -220,7 +220,7 @@ namespace UAsset.Editor
                 for (int i = 0, max = variantRules.Count; i < max; i++)
                 {
                     var rule = variantRules[i];
-                    if (EditorUtility.DisplayCancelableProgressBar($"收集资源{i}/{max}", rule.searchPath, i / (float) max))
+                    if (EditorUtility.DisplayCancelableProgressBar($"收集变体资源{i}/{max}", rule.searchPath, i / (float) max))
                         break;
                     
                     rule.prefixPath = Path.Combine("Assets", variantRootPath, v);
@@ -413,12 +413,12 @@ namespace UAsset.Editor
         {
             if (assetPath.StartsWith("Assets/") == false && assetPath.StartsWith("Packages/") == false)
             {
-                Debug.LogError($"Invalid asset path : {assetPath}");
+                Logger.E($"Invalid asset path : {assetPath}");
                 return false;
             }
             if (assetPath.Contains("/Gizmos/"))
             {
-                Debug.LogWarning($"Cannot pack gizmos asset : {assetPath}");
+                Logger.W($"Cannot pack gizmos asset : {assetPath}");
                 return false;
             }
 

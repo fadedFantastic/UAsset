@@ -85,7 +85,7 @@ namespace UAsset.Editor
             //set dirty
             if (GUI.changed)
             {
-                UnityEditor.EditorUtility.SetDirty(_rules);
+                EditorUtility.SetDirty(_rules);
             }
 
             if (GUILayout.Button("自动分析"))
@@ -266,7 +266,7 @@ namespace UAsset.Editor
                 topPath = rootPath;
             }
 
-            var selectedPath = UnityEditor.EditorUtility.OpenFolderPanel("Path", rootPath, "");
+            var selectedPath = EditorUtility.OpenFolderPanel("Path", rootPath, "");
             if (string.IsNullOrEmpty(selectedPath)) return null;
             
             if (selectedPath.Equals(topPath))
@@ -351,7 +351,7 @@ namespace UAsset.Editor
         /// </summary>
         private static void Save()
         {
-            UnityEditor.EditorUtility.SetDirty(_rules);
+            EditorUtility.SetDirty(_rules);
             AssetDatabase.SaveAssets();
         }
     }
