@@ -96,7 +96,6 @@ namespace UAsset
             if (status != LoadableStatus.Loading) return;
 
             UpdateLoading();
-            onUpdate?.Invoke(progress);
         }
 
         protected void UpdateLoading()
@@ -108,6 +107,7 @@ namespace UAsset
             }
 
             progress = 0.5f + load.progress * 0.5f;
+            onUpdate?.Invoke(progress);
 
             if (load.allowSceneActivation)
             {
