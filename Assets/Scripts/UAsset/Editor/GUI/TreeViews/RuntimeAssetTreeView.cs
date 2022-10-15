@@ -332,9 +332,10 @@ namespace UAsset.Editor
             Reload();
         }
         
-        public void SetAssets(List<Loadable> assets)
+        public void SetAssets(IEnumerable<Loadable> assets)
         {
-            _assets = assets;
+            _assets.Clear();
+            _assets.AddRange(assets);
             Reload();
         }
     }

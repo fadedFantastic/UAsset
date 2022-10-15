@@ -291,9 +291,10 @@ namespace UAsset.Editor
             Reload();
         }
         
-        public void SetBundles(List<Bundle> bundles)
+        public void SetBundles(IEnumerable<Bundle> bundles)
         {
-            _bundles = bundles;
+            _bundles.Clear();
+            _bundles.AddRange(bundles);
             Reload();
         }
     }

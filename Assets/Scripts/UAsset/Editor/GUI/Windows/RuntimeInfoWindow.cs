@@ -327,6 +327,7 @@ namespace UAsset.Editor
             _assetTreeView.SetAsMainView(assetViewMode);
             _bundleTreeView.SetAsMainView(!assetViewMode);
 
+            ReloadFrameData();
             if (assetViewMode)
             {
                 _searchField.downOrUpArrowKeyPressed -= _bundleTreeView.SetFocusAndEnsureSelectedItem;
