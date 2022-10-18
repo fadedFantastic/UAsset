@@ -332,10 +332,17 @@ namespace UAsset.Editor
             Reload();
         }
         
-        public void SetAssets(IEnumerable<Loadable> assets)
+        public void SetAssets(IEnumerable<Loadable> assets, bool showRawAsset = false)
         {
             _assets.Clear();
-            _assets.AddRange(assets);
+            if (showRawAsset)
+            {
+                _assets.AddRange(assets);
+            }
+            else
+            {
+                _assets = assets.Where(a => !(a is RawAsset)).ToList();   
+            }
             Reload();
         }
     }
