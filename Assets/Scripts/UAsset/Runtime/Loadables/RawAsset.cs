@@ -189,17 +189,5 @@ namespace UAsset
             
             return Encoding.Default.GetString(_binaryBytes); 
         }
-        
-
-        public static string GetBinaryAssetPath(string filename)
-        {
-            if (Versions.SimulationMode)
-            {
-                return $"{Application.dataPath}/../{filename}";
-            }
-            
-            var bundle = Versions.GetBundle(filename);
-            return bundle == null ? null : PathManager.GetBundlePathOrURL(bundle);   
-        }
     }
 }

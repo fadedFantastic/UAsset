@@ -228,16 +228,13 @@ namespace UAsset.Editor
                 _assets.AddRange(Scene.main.additives);
             }
             _frameWithAssets[_frame] = _assets;
-
-
-            var bundleMap = new Dictionary<string, Bundle>();
+            
             _bundles = new List<Bundle>();
             foreach (var item in Bundle.Cache.Values)
             {
                 if (item.isDone)
                 {
                     _bundles.Add(item);
-                    bundleMap.Add(item.pathOrURL, item);
                 }
             }
             _frameWithBundles[_frame] = _bundles;
@@ -245,13 +242,8 @@ namespace UAsset.Editor
             var asset2Bundle = new Dictionary<Loadable, List<Bundle>>();
             foreach (var asset in _assets)
             {
-                var assetPath = asset.pathOrURL;
-                if (Dependencies.Cache.TryGetValue(assetPath, out var dependencies))
-                {
-                    var dependBundle = dependencies.GetDebugDependBundle();
-                    var bundleList = dependBundle?.Select(p => bundleMap[p]).ToList();
-                    asset2Bundle.Add(asset, bundleList);
-                }
+                Dependencies.GetDebugDependBundle(asset.pathOrURL, out var dependBundles);
+                asset2Bundle.Add(asset, dependBundles);
             }
             _frameAsset2Bundle[_frame] = asset2Bundle;
             

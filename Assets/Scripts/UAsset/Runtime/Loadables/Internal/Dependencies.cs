@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 
@@ -117,9 +118,11 @@ namespace UAsset
         }
 
         #region 调试专用接口
-        public List<string> GetDebugDependBundle()
+        public static void GetDebugDependBundle(string assetPath, out List<Bundle> bundles)
         {
-            return _bundles.Select(i => i.pathOrURL).ToList();
+            bundles = Cache.TryGetValue(assetPath, out var dependencies) 
+                ? new List<Bundle>(dependencies._bundles) 
+                : new List<Bundle>();
         }
         #endregion
     }

@@ -18,7 +18,7 @@ namespace UAsset.Editor
 
         private void FinishLoad()
         {
-            var path = GetBinaryAssetPath(pathOrURL);
+            var path = PathManager.GetBinaryAssetPath(pathOrURL);
             _binaryBytes = File.ReadAllBytes(path);
             Finish();
         }

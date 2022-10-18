@@ -132,6 +132,17 @@ namespace UAsset
             return path;
         }
         
+        public static string GetBinaryAssetPath(string filename)
+        {
+            if (Versions.SimulationMode)
+            {
+                return $"{Application.dataPath}/../{filename}";
+            }
+            
+            var bundle = Versions.GetBundle(filename);
+            return bundle != null ? GetBundlePathOrURL(bundle) : null;   
+        }
+        
         public static string GetRegularPath(string path)
         {
             if (string.IsNullOrEmpty(path))
