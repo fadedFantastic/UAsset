@@ -37,6 +37,7 @@ namespace UAsset.Editor
         private bool _recording = true;
         private int _currentFrame;
         private int _frame;
+        private bool _showRawAsset;
         private SearchField _searchField;
 
         private static bool _needReset;
@@ -138,7 +139,17 @@ namespace UAsset.Editor
                 }
 
                 if (_mode == RuntimeInfoWindowMode.AssetView)
+                {
+                    EditorGUI.BeginChangeCheck();
+                    _showRawAsset = GUILayout.Toggle(_showRawAsset, "Show RawAsset", EditorStyles.toolbarButton,
+                        GUILayout.Width(120));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        ReloadFrameData();
+                    }
+
                     _assetTreeView.searchString = _searchField.OnToolbarGUI(_assetTreeView.searchString);
+                }
                 else
                     _bundleTreeView.searchString = _searchField.OnToolbarGUI(_bundleTreeView.searchString);
             }
@@ -257,7 +268,8 @@ namespace UAsset.Editor
                 if (_assetTreeView != null)
                 {
                     _assetTreeView.SetAssets(
-                        _frameWithAssets.TryGetValue(_frame, out var value) ? value : new List<Loadable>());
+                        _frameWithAssets.TryGetValue(_frame, out var value) ? value : new List<Loadable>(), 
+                        _showRawAsset);
                 }
             }
             else
