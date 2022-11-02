@@ -65,7 +65,13 @@ namespace UAsset
             foreach (var assetObject in subAssets)
             {
                 if (assetObject.name == assetName)
-                    return assetObject as TObject;
+                {
+                    var obj = assetObject as TObject;
+                    if (obj != null)
+                    {
+                        return obj;
+                    }
+                }
             }
 
             Logger.W($"Not found sub asset object : {assetName}");
