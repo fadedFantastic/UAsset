@@ -46,8 +46,28 @@ namespace GamePlay
                 unloadButton.onClick.AddListener(() =>
                 {
                     loadable?.Release();
+                    image.sprite = null;
                 });
             }
+
+            // 同步加载prefab，添加AssetAutoReferencer组件，销毁时自动卸载资源
+            {
+                var button = rootCanvas.transform.Find("load_prefab").GetComponent<Button>();
+                GameObject go = null;
+                button.onClick.AddListener(() =>
+                {
+                    var loadable = Asset.Load("Assets/Res/UIPanel/Window.prefab", typeof(GameObject));
+                    go = Instantiate(loadable.Get<GameObject>(), rootCanvas.transform);
+                    go.AddComponent<AssetAutoReferencer>().RefAsset(loadable);
+                });
+                
+                var unloadButton = rootCanvas.transform.Find("load_prefab/unload").GetComponent<Button>();
+                unloadButton.onClick.AddListener(() =>
+                {
+                    Destroy(go);
+                });
+            }
+            
         }
     }
 }

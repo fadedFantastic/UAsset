@@ -67,11 +67,13 @@ namespace UAsset
             }
 
             if (status == OperationStatus.Success)
+            {
                 if (result != null)
                 {
                     Object.DestroyImmediate(result);
                     result = null;
                 }
+            }
 
             if (_asset == null) return;
 

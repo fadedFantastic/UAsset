@@ -55,53 +55,108 @@ MonoBehaviour:
     assetBundleName: 
     packed: 1
     filterRule: CollectAll
-    collectorType: 1
+    collectorType: 0
   ruleAssets:
   - assetName: Assets/Res/RawText/rawText1.txt
     bundle: Assets/Res/RawText/rawText1_txt
     guid: b167a56eaa566a641975b8ddac3e7427
     resourceVariant: 
-    dependAssets:
-    - Assets/Res/RawText/rawText1.txt
+    rawFile: 1
+    dependAssets: []
     collectorType: 0
   - assetName: Assets/Res/Scene/GameScene.unity
     bundle: Assets/Res/Scene/GameScene_unity
     guid: 148e5a9b6be1247448b63124fb3acd8e
     resourceVariant: 
-    dependAssets:
-    - Packages/com.unity.ugui/Runtime/UI/Core/Layout/CanvasScaler.cs
-    - Assets/Res/UISprite/daggers_1.png
-    - Packages/com.unity.ugui/Runtime/UI/Core/Text.cs
-    - Packages/com.unity.ugui/Runtime/UI/Core/GraphicRaycaster.cs
-    - Assets/Scripts/GamePlay/GameScene.cs
-    - Packages/com.unity.ugui/Runtime/UI/Core/Button.cs
-    - Packages/com.unity.ugui/Runtime/EventSystem/InputModules/StandaloneInputModule.cs
-    - Packages/com.unity.ugui/Runtime/EventSystem/EventSystem.cs
-    - Packages/com.unity.ugui/Runtime/UI/Core/Image.cs
-    - Assets/Res/Scene/GameScene.unity
+    rawFile: 0
+    dependAssets: []
     collectorType: 0
   - assetName: Assets/Res/Scene/SubScene.unity
     bundle: Assets/Res/Scene/SubScene_unity
     guid: 711c0b51472c8344099bbab3a178bd0b
     resourceVariant: 
-    dependAssets:
-    - Assets/Res/Scene/SubScene.unity
+    rawFile: 0
+    dependAssets: []
     collectorType: 0
   - assetName: Assets/Res/UIPanel/Window.prefab
     bundle: Assets/Res/UIPanel/Window_prefab
     guid: c7c2f09e15f3e334b9016fb245092473
     resourceVariant: 
+    rawFile: 0
     dependAssets:
-    - Assets/Res/UIPanel/Window.prefab
-    - Packages/com.unity.ugui/Runtime/UI/Core/Image.cs
+    - Assets/Res/UISprite/daggers_8.png
+    - Assets/Res/UISprite/daggers_7.png
     collectorType: 0
   - assetName: Assets/Res/UISprite/daggers_1.png
     bundle: Assets/Res/UISprite
     guid: a1da95e5af03e1f43a8f6a53c14b94a3
     resourceVariant: 
-    dependAssets:
-    - Assets/Res/UISprite/daggers_1.png
-    collectorType: 1
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
+  - assetName: Assets/Res/UISprite/daggers_10.png
+    bundle: Assets/Res/UISprite
+    guid: 758b68e757cfe9e47bc1871a4273d22b
+    resourceVariant: 
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
+  - assetName: Assets/Res/UISprite/daggers_2.png
+    bundle: Assets/Res/UISprite
+    guid: b55f5a6e77410124d83d60941b318f67
+    resourceVariant: 
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
+  - assetName: Assets/Res/UISprite/daggers_3.png
+    bundle: Assets/Res/UISprite
+    guid: f9aa8f52ca4cc4b4d978f95edd5ca4fb
+    resourceVariant: 
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
+  - assetName: Assets/Res/UISprite/daggers_4.png
+    bundle: Assets/Res/UISprite
+    guid: 3a71d90c27444c747ae9d1a079a99c89
+    resourceVariant: 
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
+  - assetName: Assets/Res/UISprite/daggers_5.png
+    bundle: Assets/Res/UISprite
+    guid: 0f97a0ecacaafd740b0d2d5384b7c340
+    resourceVariant: 
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
+  - assetName: Assets/Res/UISprite/daggers_6.png
+    bundle: Assets/Res/UISprite
+    guid: 434aa778b7d54d941855da5a9b8c0182
+    resourceVariant: 
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
+  - assetName: Assets/Res/UISprite/daggers_7.png
+    bundle: Assets/Res/UISprite
+    guid: 471a0abc476fd3c4a92b0ca3c4544ef2
+    resourceVariant: 
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
+  - assetName: Assets/Res/UISprite/daggers_8.png
+    bundle: Assets/Res/UISprite
+    guid: 42995e24415392c439f08b5f0718b42b
+    resourceVariant: 
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
+  - assetName: Assets/Res/UISprite/daggers_9.png
+    bundle: Assets/Res/UISprite
+    guid: c195b1a833107924f9e43f1c97c5006d
+    resourceVariant: 
+    rawFile: 0
+    dependAssets: []
+    collectorType: 0
   ruleBundles:
   - name: Assets/Res/RawText/rawText1_txt_ab
     packed: 1
@@ -135,6 +190,15 @@ MonoBehaviour:
     packed: 1
     assets:
     - Assets/Res/UISprite/daggers_1.png
+    - Assets/Res/UISprite/daggers_10.png
+    - Assets/Res/UISprite/daggers_2.png
+    - Assets/Res/UISprite/daggers_3.png
+    - Assets/Res/UISprite/daggers_4.png
+    - Assets/Res/UISprite/daggers_5.png
+    - Assets/Res/UISprite/daggers_6.png
+    - Assets/Res/UISprite/daggers_7.png
+    - Assets/Res/UISprite/daggers_8.png
+    - Assets/Res/UISprite/daggers_9.png
     variant: 
     tag: 
     packByRaw: 0

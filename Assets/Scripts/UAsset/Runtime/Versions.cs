@@ -84,12 +84,12 @@ namespace UAsset
         public static string CurrentVariant { get; set; } = string.Empty;
 
         /// <summary>
-        ///     当前语言
+        ///     内置变体名
         /// </summary>
         public static string BuiltinVariant { get; private set; }
 
         /// <summary>
-        ///     语言列表
+        ///     变体名列表
         /// </summary>
         public static string[] VariantTypes { get; private set; }
 
