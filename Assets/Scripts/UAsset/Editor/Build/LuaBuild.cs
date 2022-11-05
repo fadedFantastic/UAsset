@@ -8,6 +8,7 @@ namespace UAsset.Editor
 {
     public class LuaBuild
     {
+        // luajit存放目录
 #if UNITY_IPHONE && UNITY_EDITOR_OSX
         private  static readonly string _luajit = Application.dataPath + "/../Lua/Dist/mac/ios64";
 #elif UNITY_EDITOR_OSX && UNITY_ANDROID
@@ -75,23 +76,21 @@ namespace UAsset.Editor
 
             len = sourceDir.Length;
 
-            string[] files = Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories);
-            for (int i = 0; i < files.Length; i++)
+            var files = Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories);
+            for (var i = 0; i < files.Length; i++)
             {
-                string srcPath = files[i];
+                var srcPath = files[i];
                 if (srcPath.Contains(".svn")) continue;
                 if (srcPath.Contains(".git")) continue;
                 if (srcPath.Contains(".idea")) continue;
                 if (srcPath.Contains(".meta")) continue;
                 if (srcPath.Contains(".vs")) continue;
                 if (srcPath.Contains(".md")) continue;
-                string str = files[i].Remove(0, len);
-                // str = str.Replace(".bytes", "");
-                string dest = destDir + str + ".bytes";
+                var str = files[i].Remove(0, len);
+                var dest = destDir + str + ".bytes";
                 
                 Utility.CreateFileDirectory(dest);
- 
-                //TODO: lua目录最好不要乱放文件
+                
                 var ext = Path.GetExtension(str);
                 if(ext != ".lua" && ext !=".pb") continue;
                 
@@ -108,7 +107,7 @@ namespace UAsset.Editor
 
         private static bool LuaJit(string sourceDir, string destPath, ref StringBuilder strErr)
         {
-            using (System.Diagnostics.Process proc = new System.Diagnostics.Process())
+            using (var proc = new System.Diagnostics.Process())
             {
                 proc.StartInfo.FileName = $"{_luajit}/luajit";
                 proc.StartInfo.WorkingDirectory = _luajit;
@@ -120,7 +119,7 @@ namespace UAsset.Editor
                 proc.StartInfo.RedirectStandardInput = true;
                 proc.EnableRaisingEvents = true;
 
-                StringBuilder errorSb = new StringBuilder();
+                var errorSb = new StringBuilder();
                 proc.ErrorDataReceived += (sender, args) => errorSb.Append(args.Data);
 
                 proc.Start();

@@ -61,7 +61,8 @@ public class UpdateVersion : IPatchStep
             {
                 if (isOk)
                 {
-                    // TODO: 跳转到对应渠道的下载地址
+                    // 跳转到对应渠道的下载地址
+                    
                 }
                 PatchUpdater.Quit();
             });
@@ -69,9 +70,9 @@ public class UpdateVersion : IPatchStep
         }
         
         // 设置资源最新下载地址
-        if (!string.IsNullOrEmpty(remoteVersions.UpdatePrefixUri))
+        if (!string.IsNullOrEmpty(remoteVersions.updatePrefixUri))
         {
-            Downloader.DownloadURL = remoteVersions.UpdatePrefixUri;
+            Downloader.DownloadURL = remoteVersions.updatePrefixUri;
         }
         
         // 比较资源版本号，检查是否需要热更

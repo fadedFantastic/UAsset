@@ -48,7 +48,7 @@ namespace UAsset
         /// <summary>
         ///     资源更新下载地址 (打包后由upload2server.sh脚本写入)
         /// </summary>
-        public string UpdatePrefixUri;
+        public string updatePrefixUri;
 
         public List<string> streamingAssets = new List<string>();
 

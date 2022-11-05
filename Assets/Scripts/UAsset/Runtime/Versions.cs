@@ -157,7 +157,7 @@ namespace UAsset
         {
             GameVersion = versions.gameVersion;
             InternalResourceVersion = versions.internalResourceVersion;
-            UpdatePrefixUri = versions.UpdatePrefixUri;
+            UpdatePrefixUri = versions.updatePrefixUri;
             
             // 记录变体版本号
             VariantVersions.Clear();
