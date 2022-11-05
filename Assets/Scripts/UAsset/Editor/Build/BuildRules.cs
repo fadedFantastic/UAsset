@@ -45,6 +45,7 @@ namespace UAsset.Editor
         public string bundle;
         public string guid;
         public string resourceVariant;
+        public bool rawFile;
         public List<string> dependAssets = new List<string>();
         public CollectorType collectorType;
     }
@@ -394,7 +395,7 @@ namespace UAsset.Editor
         {
             foreach (var collectAsset in allCollectAssets)
             {
-                if (collectAsset.collectorType != CollectorType.MainAssetCollector) continue;
+                if (collectAsset.collectorType != CollectorType.MainAssetCollector || collectAsset.rawFile) continue;
                 
                 if (collectAsset.dependAssets.Contains(dependAssetPath))
                     return false;
@@ -573,10 +574,10 @@ namespace UAsset.Editor
                         // 注意：原生文件只支持无依赖关系的资源
                         var depends = AssetDatabase.GetDependencies(asset, true);
                         if (depends.Length != 1)
-                            throw new Exception("RawFile cannot depend by other assets");
+                            throw new Exception("RawFile cannot depend on other assets");
                         
                         var bundleName = MakeBundleName(asset, null);
-                        CollectRuleAsset(asset, bundleName, rule.collectorType, null);
+                        CollectRuleAsset(asset, bundleName, rule.collectorType, null, true);
                         RecordBundleRule(bundleName, rule);
                     }
                     break;
@@ -586,7 +587,7 @@ namespace UAsset.Editor
         }
 
         private void CollectRuleAsset(string assetPath, string bundleName, 
-            CollectorType type = CollectorType.DependAssetCollector, string variant = null)
+            CollectorType type = CollectorType.MainAssetCollector, string variant = null, bool rawFile = false)
         {
             var ruleAsset = new RuleAsset
             {
@@ -594,10 +595,17 @@ namespace UAsset.Editor
                 bundle = bundleName,
                 guid = AssetDatabase.AssetPathToGUID(assetPath),
                 resourceVariant = variant ?? string.Empty,
-                dependAssets = AssetDatabase.GetDependencies(assetPath).ToList(),
+                rawFile = rawFile,
+                dependAssets = GetDependencies(assetPath),
                 collectorType = type
             };
             _collectedRuleAsset.Add(assetPath, ruleAsset);
+        }
+
+        private List<string> GetDependencies(string mainAssetPath)
+        {
+            var dependencies = AssetDatabase.GetDependencies(mainAssetPath);
+            return dependencies.Where(dep => IsValidAsset(dep) && dep != mainAssetPath).ToList();
         }
 
         private void Clear()
