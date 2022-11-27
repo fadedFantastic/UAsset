@@ -74,7 +74,6 @@ namespace UAsset.Editor
             manifest.bundles = bundles;
             manifest.assets = assets;
             manifest.dirs = dirs;
-            manifest.bundleExtension = Settings.BundleExtension;
             _task.changes.AddRange(changes);
             _task.SaveManifest(manifest);
             

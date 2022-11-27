@@ -96,7 +96,7 @@ namespace UAsset
 
         protected override void OnUnload()
         {
-            Cache.Remove(pathOrURL);
+            Cache.Remove($"{pathOrURL}[{type.Name}]");
         }
 
         public static Asset LoadAsync(string path, Type type, Action<Asset> completed = null)
@@ -133,19 +133,12 @@ namespace UAsset
         private static Asset LoadInternal(string path, Type type,
             Action<Asset> completed = null)
         {
-            // TODO: 现在业务层传过来的是短路径，暂时先由外面直接传全路径
-            // PathManager.GetActualPath(ref path);
-            // if (!Versions.Contains(path))
-            // {
-            //     Logger.E("FileNotFoundException {0}", path);
-            //     return null;
-            // }
-            
             path = PathManager.GetAssetPath(path);
-            if (!Cache.TryGetValue(path, out var item))
+            var key = $"{path}[{type.Name}]";
+            if (!Cache.TryGetValue(key, out var item))
             {
                 item = CreateInstance(path, type);
-                Cache.Add(path, item);
+                Cache.Add(key, item);
             }
 
             if (completed != null) item.completed += completed;

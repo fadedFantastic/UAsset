@@ -31,12 +31,12 @@ namespace UAsset
         public bool encryptionEnabled;
 
         /// <summary>
-        ///     包体默认变体类型
+        ///     包体内置变体类型
         /// </summary>
         public string builtinVariant;
 
         /// <summary>
-        ///     语言列表
+        ///     变体名列表
         /// </summary>
         public string[] variantTypes;
 

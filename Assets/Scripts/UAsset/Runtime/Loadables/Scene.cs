@@ -246,7 +246,7 @@ namespace UAsset
 
         private static Scene Create(string assetPath, bool additive = false)
         {
-            if (!Versions.Contains(assetPath))
+            if (!Versions.ContainAsset(assetPath))
             {
                 if (!scenesInBuild.Contains(assetPath)) throw new FileNotFoundException(assetPath);
 

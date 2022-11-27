@@ -29,15 +29,6 @@ namespace UAsset
         public static string PlatformName { get; set; } = Utility.GetPlatformName();
 
         /// <summary>
-        ///     根据别名获取实际加载路径
-        /// </summary>
-        /// <param name="asset">别名</param>
-        public static void GetActualPath(ref string asset)
-        {
-            if (Versions.Manifest.GetActualPath(asset, out var value)) asset = value;
-        }
-
-        /// <summary>
         ///     获取指定文件相对安装包的加载地址，专供 UnityWebRequest 使用。
         /// </summary>
         /// <param name="file">指定文件的文件名</param>

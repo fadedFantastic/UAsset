@@ -396,7 +396,7 @@ namespace UAsset
         public static bool GetDependencies(string assetPath, out ManifestBundle mainBundle,
             out ManifestBundle[] dependencies)
         {
-            if (Manifest.Contains(assetPath))
+            if (Manifest.ContainAsset(assetPath))
             {
                 mainBundle = Manifest.GetBundle(assetPath);
                 dependencies = Manifest.GetDependencies(mainBundle);
@@ -411,21 +411,21 @@ namespace UAsset
         /// <summary>
         ///     判断资源是否包含在当前版本中。
         /// </summary>
-        /// <param name="assetPath">资源路径</param>
+        /// <param name="path">资源路径</param>
         /// <returns></returns>
-        public static bool Contains(string assetPath)
+        public static bool ContainAsset(string path)
         {
-            return Manifest.Contains(assetPath);
+            return Manifest.ContainAsset(path);
         }
 
         /// <summary>
         ///     获取Bundle信息
         /// </summary>
-        /// <param name="bundle">bundle名</param>
+        /// <param name="assetPath">资源名</param>
         /// <returns></returns>
-        public static ManifestBundle GetBundle(string bundle)
+        public static ManifestBundle GetBundle(string assetPath)
         {
-            return Manifest.GetBundle(bundle);
+            return Manifest.GetBundle(assetPath);
         }
 
         public static string[] GetDependencies(string path)
