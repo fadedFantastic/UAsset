@@ -14,7 +14,8 @@ namespace UAsset.Editor
         private ReorderableList _list;
         private ReorderableList _variantList;
         private Vector2 _scrollPosition = Vector2.zero;
-        
+        private readonly int _assetRootPathLength = "Assets".Length;
+
         private const float GAP = 5;
         
         public static void ShowWindow()
@@ -276,7 +277,7 @@ namespace UAsset.Editor
 
             if (selectedPath.StartsWith(topPath))
             {
-                return selectedPath.Substring(topPath.Length + 1);
+                return selectedPath.Substring(topPath.Length - _assetRootPathLength);
             }
             
             ShowNotification(new GUIContent($"不能{rootPath}目录之外!"));

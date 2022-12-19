@@ -67,9 +67,7 @@ namespace UAsset.Editor
     public class BuildRule
     {
         [Tooltip("是否激活规则")] public bool valid = true;
-
-        [NonSerialized] public string prefixPath = "";
-
+        
         [Tooltip("搜索路径")] public string searchPath;
 
         [Tooltip("资源分组标签（打了标签热更时会忽略)")] public string tag = string.Empty;
@@ -93,7 +91,7 @@ namespace UAsset.Editor
             // 检测规则是否激活
             if (!valid) return Array.Empty<string>();
 
-            var path = GetFullSearchPath();
+            var path = GetSearchPath();
             if (!Directory.Exists(path))
             {
                 Debug.LogError("Rule searchPath not exist: " + path);
@@ -117,9 +115,9 @@ namespace UAsset.Editor
         /// <summary>
         /// 获取搜索全路径
         /// </summary>
-        public string GetFullSearchPath()
+        public string GetSearchPath()
         {
-            return Path.Combine(prefixPath, searchPath);
+            return searchPath;
         }
     }
 
@@ -211,7 +209,6 @@ namespace UAsset.Editor
                 if (EditorUtility.DisplayCancelableProgressBar($"收集资源{i}/{max}", rule.searchPath, i / (float) max))
                     break;
                 
-                rule.prefixPath = "Assets/";
                 ApplyRule(rule);
             }
 
@@ -224,7 +221,7 @@ namespace UAsset.Editor
                     if (EditorUtility.DisplayCancelableProgressBar($"收集变体资源{i}/{max}", rule.searchPath, i / (float) max))
                         break;
                     
-                    rule.prefixPath = Path.Combine("Assets", variantRootPath, v);
+                    rule.searchPath = Path.Combine(variantRootPath, v);
                     ApplyRule(rule);
                 }
             }
@@ -547,7 +544,7 @@ namespace UAsset.Editor
                 }
                 case PackRule.PackByTopDirectory:
                 {
-                    var rs =  PathManager.GetRegularPath(rule.GetFullSearchPath());
+                    var rs =  PathManager.GetRegularPath(rule.GetSearchPath());
                     var startIndex = rs.Length;
                     foreach (var asset in assets)
                     {
